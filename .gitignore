@@ -1,0 +1,24 @@
+# Python / backend
+backend/.venv/
+__pycache__/
+*.pyc
+backend/expenza.db
+backend/ml_training/data/
+.env
+
+# Flutter / mobile
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/ios/Pods/
+
+# IDE / OS
+.claude/
+claude-skills/
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
