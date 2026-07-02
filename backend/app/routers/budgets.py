@@ -29,7 +29,9 @@ def _spent_by_category(db: Session, user_id: int) -> dict:
         .group_by(models.Transaction.category)
         .all()
     )
-    return {cat: total for cat, total in rows}
+    res = {cat: total for cat, total in rows}
+    res[models.CategoryEnum.toplam] = sum(res.values())
+    return res
 
 
 @router.post("", response_model=schemas.BudgetOut, status_code=201)

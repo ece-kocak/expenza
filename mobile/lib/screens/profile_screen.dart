@@ -329,7 +329,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showCurrencyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: AppColors.glassBorder)),
+          title: Text('Para Birimi Seçin',
+              style: TextStyle(
+                  color: AppColors.onSurface,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _currencyOption(context, 'Türk Lirası (₺)', '₺'),
+              _currencyOption(context, 'Dolar (\$)', '\$'),
+              _currencyOption(context, 'Euro (€)', '€'),
+              _currencyOption(context, 'Sterlin (£)', '£'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _currencyOption(BuildContext context, String label, String symbol) {
+    final active = currencyNotifier.value == symbol;
+    return ListTile(
+      title: Text(label, style: TextStyle(color: AppColors.onSurface, fontSize: 14)),
+      trailing: active ? Icon(Icons.check, color: AppColors.primary, size: 18) : null,
+      onTap: () {
+        currencyNotifier.value = symbol;
+        Navigator.of(context).pop();
+        setState(() {});
+      },
+    );
+  }
+
   Widget _settings(bool isDark) {
+    final curVal = currencyNotifier.value;
+    final curLabel = curVal == '₺'
+        ? 'Türk Lirası (₺)'
+        : curVal == '\$'
+            ? 'Dolar (\$)'
+            : curVal == '€'
+                ? 'Euro (€)'
+                : 'Sterlin (£)';
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -349,9 +399,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           _divider(),
           _settingRow(_okColor, Icons.attach_money, 'Para Birimi',
-              value: 'Türk Lirası (₺)', chevron: true, onTap: () {
-            _showInfoDialog(context, 'Para Birimi',
-                'Para birimi bu MVP sürümünde Türk Lirası (₺) olarak sabitlenmiştir.');
+              value: curLabel, chevron: true, onTap: () {
+            _showCurrencyDialog(context);
           }),
           _divider(),
           _settingRow(const Color(0xFFB68CF0), Icons.grid_view, 'Kategoriler',

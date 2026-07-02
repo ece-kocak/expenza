@@ -18,7 +18,8 @@ String money(double v, {bool showSign = false}) {
   final whole = abs.truncate();
   final cents = ((abs - whole) * 100).round();
   final sign = neg ? '−' : (showSign ? '+' : '');
-  final base = '$sign₺${_grp.format(whole)}';
+  final symbol = currencyNotifier.value;
+  final base = '$sign$symbol${_grp.format(whole)}';
   return cents == 0 ? base : '$base,${cents.toString().padLeft(2, '0')}';
 }
 

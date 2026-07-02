@@ -33,6 +33,7 @@ class CategoryEnum(str, enum.Enum):
     egitim = "Eğitim"
     alisveris = "Alışveriş"
     diger = "Diğer"
+    toplam = "Toplam"
 
 
 class TxType(str, enum.Enum):

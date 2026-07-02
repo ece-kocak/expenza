@@ -57,15 +57,23 @@ class BudgetsScreenState extends State<BudgetsScreen> {
                   child: CircularProgressIndicator(color: AppColors.onSurface));
             }
             final budgets = snap.data ?? [];
-            final limit = budgets.fold(0.0, (s, b) => s + b.monthlyLimit);
-            final spent = budgets.fold(0.0, (s, b) => s + b.spent);
+            final categoryBudgets = budgets.where((b) => b.category != 'Toplam').toList();
+            final totalBudget = budgets.firstWhere(
+              (b) => b.category == 'Toplam',
+              orElse: () => BudgetModel(id: -1, category: 'Toplam', monthlyLimit: 0.0, spent: 0.0),
+            );
+
+            final spent = totalBudget.id == -1 
+                ? categoryBudgets.fold(0.0, (s, b) => s + b.spent)
+                : totalBudget.spent;
+            final limit = totalBudget.monthlyLimit;
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(24, 56, 24, 120),
               children: [
                 Rise(child: _header(isDark)),
                 const SizedBox(height: 22),
-                Rise(delayMs: 40, child: _totalCard(limit, spent)),
+                Rise(delayMs: 40, child: _totalCard(limit, spent, totalBudget, budgets)),
                 const SizedBox(height: 22),
                 Rise(
                   delayMs: 80,
@@ -95,7 +103,7 @@ class BudgetsScreenState extends State<BudgetsScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                if (budgets.isEmpty)
+                if (categoryBudgets.isEmpty)
                   Rise(
                     delayMs: 120,
                     child: _card(
@@ -105,10 +113,10 @@ class BudgetsScreenState extends State<BudgetsScreen> {
                     ),
                   )
                 else
-                  for (var i = 0; i < budgets.length; i++)
+                  for (var i = 0; i < categoryBudgets.length; i++)
                     Rise(
                         delayMs: 100 + i * 30,
-                        child: _budgetCard(budgets[i], budgets)),
+                        child: _budgetCard(categoryBudgets[i], budgets)),
               ],
             );
           },
@@ -169,7 +177,7 @@ class BudgetsScreenState extends State<BudgetsScreen> {
     );
   }
 
-  Widget _totalCard(double limit, double spent) {
+  Widget _totalCard(double limit, double spent, BudgetModel totalBudget, List<BudgetModel> all) {
     final remain = limit - spent;
     final pct = limit == 0 ? 0.0 : (spent / limit * 100);
     final clamped = pct.clamp(0, 100).toDouble();
@@ -178,110 +186,113 @@ class BudgetsScreenState extends State<BudgetsScreen> {
     final lastDay = DateTime(now.year, now.month + 1, 0).day;
     final daysLeft = lastDay - now.day;
 
-    return _card(
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('TOPLAM AYLIK BÜTÇE',
-                  style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.4,
-                      color: AppColors.onSurfaceVariant)),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(99)),
-                child: Text('%${pct.toStringAsFixed(0)} kullanıldı',
+    return Press(
+      onTap: () => _openSheet(all, totalBudget.id == -1 ? null : totalBudget, isTotal: true),
+      child: _card(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(limit == 0 ? 'AYLIK TOPLAM BÜTÇE (LİMİT BELİRLE)' : 'TOPLAM AYLIK BÜTÇE',
                     style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                        fontFeatures: kTnum)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('KALAN',
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4,
+                        color: AppColors.onSurfaceVariant)),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(99)),
+                  child: Text(limit == 0 ? 'Limit belirlenmedi' : '%${pct.toStringAsFixed(0)} kullanıldı',
                       style: TextStyle(
                           fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.4,
-                          color: AppColors.outline)),
-                  const SizedBox(height: 5),
-                  Text(money(remain),
-                      style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          height: 1,
-                          color: remain < 0
-                              ? AppColors.error
-                              : AppColors.onSurface,
-                          fontFeatures: kTnum)),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('LİMİT',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.4,
-                          color: AppColors.outline)),
-                  const SizedBox(height: 5),
-                  Text(money(limit),
-                      style: TextStyle(
-                          fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.onSurfaceVariant,
+                          color: color,
                           fontFeatures: kTnum)),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: clamped / 100),
-              duration: const Duration(milliseconds: 900),
-              curve: Curves.easeOutCubic,
-              builder: (context, v, _) => LinearProgressIndicator(
-                value: v,
-                minHeight: 10,
-                backgroundColor: AppColors.surfaceContainer,
-                color: color,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('KALAN',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.4,
+                            color: AppColors.outline)),
+                    const SizedBox(height: 5),
+                    Text(money(remain),
+                        style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                            color: remain < 0
+                                ? AppColors.error
+                                : AppColors.onSurface,
+                            fontFeatures: kTnum)),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('LİMİT',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.4,
+                            color: AppColors.outline)),
+                    const SizedBox(height: 5),
+                    Text(money(limit),
+                        style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurfaceVariant,
+                            fontFeatures: kTnum)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: clamped / 100),
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOutCubic,
+                builder: (context, v, _) => LinearProgressIndicator(
+                  value: v,
+                  minHeight: 10,
+                  backgroundColor: AppColors.surfaceContainer,
+                  color: color,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 9),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('${money(spent)} harcandı',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.outline,
-                      fontFeatures: kTnum)),
-              Text('Ay sonuna $daysLeft gün',
-                  style: TextStyle(fontSize: 12, color: AppColors.outline)),
-            ],
-          ),
-        ],
+            const SizedBox(height: 9),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('${money(spent)} harcandı',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.outline,
+                        fontFeatures: kTnum)),
+                Text('Ay sonuna $daysLeft gün',
+                    style: TextStyle(fontSize: 12, color: AppColors.outline)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -383,20 +394,22 @@ class BudgetsScreenState extends State<BudgetsScreen> {
   }
 
   // ---- Ekle / Düzenle / Sil alt sayfası ----
-  Future<void> _openSheet(List<BudgetModel> all, BudgetModel? editing) async {
+  Future<void> _openSheet(List<BudgetModel> all, BudgetModel? editing, {bool isTotal = false}) async {
     final usedCats = all.map((b) => b.category).toSet();
-    final available = editing != null
-        ? [editing.category]
-        : kCategories.where((c) => !usedCats.contains(c)).toList();
-    if (available.isEmpty) {
+    final available = isTotal 
+        ? ['Toplam']
+        : (editing != null
+            ? [editing.category]
+            : kCategories.where((c) => !usedCats.contains(c)).toList());
+    if (available.isEmpty && !isTotal) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Tüm kategoriler için bütçe tanımlı.')));
       return;
     }
 
-    String chosen = editing?.category ?? available.first;
+    String chosen = isTotal ? 'Toplam' : (editing?.category ?? available.first);
     final limitCtrl = TextEditingController(
-        text: editing != null ? editing.monthlyLimit.toStringAsFixed(0) : '');
+        text: editing != null && editing.monthlyLimit > 0 ? editing.monthlyLimit.toStringAsFixed(0) : '');
 
     await showModalBottomSheet<void>(
       context: context,
@@ -433,7 +446,9 @@ class BudgetsScreenState extends State<BudgetsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(editing != null ? '${editing.category} Bütçesi' : 'Yeni Bütçe',
+                        Text(isTotal
+                            ? (editing != null && editing.monthlyLimit > 0 ? 'Toplam Bütçeyi Düzenle' : 'Toplam Bütçe Belirle')
+                            : (editing != null ? '${editing.category} Bütçesi' : 'Yeni Bütçe'),
                             style: TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w700,
@@ -446,61 +461,63 @@ class BudgetsScreenState extends State<BudgetsScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text('KATEGORİ',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.4,
-                            color: AppColors.outline)),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: available.map((c) {
-                        final on = c == chosen;
-                        final cc = categoryColor(c);
-                        return GestureDetector(
-                          onTap: editing != null
-                              ? null
-                              : () => setSheet(() => chosen = c),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 13, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: on
-                                  ? cc.withValues(alpha: 0.16)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(99),
-                              border: Border.all(
-                                  color: on
-                                      ? Colors.transparent
-                                      : AppColors.surfaceContainerHigh),
+                    if (!isTotal) ...[
+                      Text('KATEGORİ',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.4,
+                              color: AppColors.outline)),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: available.map((c) {
+                          final on = c == chosen;
+                          final cc = categoryColor(c);
+                          return GestureDetector(
+                            onTap: editing != null
+                                ? null
+                                : () => setSheet(() => chosen = c),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 13, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: on
+                                    ? cc.withValues(alpha: 0.16)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(99),
+                                border: Border.all(
+                                    color: on
+                                        ? Colors.transparent
+                                        : AppColors.surfaceContainerHigh),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 7,
+                                    height: 7,
+                                    decoration: BoxDecoration(
+                                        color: cc, shape: BoxShape.circle),
+                                  ),
+                                  const SizedBox(width: 7),
+                                  Text(c,
+                                      style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: on
+                                              ? cc
+                                              : AppColors.onSurfaceVariant)),
+                                ],
+                              ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: BoxDecoration(
-                                      color: cc, shape: BoxShape.circle),
-                                ),
-                                const SizedBox(width: 7),
-                                Text(c,
-                                    style: TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: on
-                                            ? cc
-                                            : AppColors.onSurfaceVariant)),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 20),
-                    Text('AYLIK LİMİT (₺)',
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                    Text('AYLIK LİMİT (${currencyNotifier.value})',
                         style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -517,7 +534,7 @@ class BudgetsScreenState extends State<BudgetsScreen> {
                       ),
                       child: Row(
                         children: [
-                          Text('₺',
+                          Text(currencyNotifier.value,
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,

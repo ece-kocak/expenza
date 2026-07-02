@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 /// Uygulama tema modu. Profil ekranındaki düğme bunu değiştirir; main.dart
 /// dinleyip tüm ağacı yeniden çizer.
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.dark);
+final ValueNotifier<String> currencyNotifier = ValueNotifier('₺');
 
 /// Expenza "Quiet Premium" renk paleti.
 ///

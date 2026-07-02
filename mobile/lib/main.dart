@@ -21,29 +21,34 @@ class ExpenzaApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeModeNotifier,
       builder: (context, mode, _) {
-        final isDark = mode == ThemeMode.dark;
-        // Ekranların okuduğu nötr renkleri aktif moda göre güncelle.
-        AppColors.applyMode(isDark);
-        return MaterialApp(
-          title: 'Expenza',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.fromMode(isDark),
-          // Geniş ekranlarda (web/masaüstü) uygulamayı telefon genişliğinde bir
-          // çerçeveye alıp ortala; dar ekranlarda (telefon) tam genişlik.
-          builder: (context, child) {
-            return ColoredBox(
-              color: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFE6E9EC),
-              child: Center(
-                child: ClipRect(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 440),
-                    child: child ?? const SizedBox.shrink(),
+        return ValueListenableBuilder<String>(
+          valueListenable: currencyNotifier,
+          builder: (context, currency, _) {
+            final isDark = mode == ThemeMode.dark;
+            // Ekranların okuduğu nötr renkleri aktif moda göre güncelle.
+            AppColors.applyMode(isDark);
+            return MaterialApp(
+              title: 'Expenza',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.fromMode(isDark),
+              // Geniş ekranlarda (web/masaüstü) uygulamayı telefon genişliğinde bir
+              // çerçeveye alıp ortala; dar ekranlarda (telefon) tam genişlik.
+              builder: (context, child) {
+                return ColoredBox(
+                  color: isDark ? const Color(0xFF0A0A0A) : const Color(0xFFE6E9EC),
+                  child: Center(
+                    child: ClipRect(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 440),
+                        child: child ?? const SizedBox.shrink(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
+              home: _AuthGate(),
             );
           },
-          home: _AuthGate(),
         );
       },
     );

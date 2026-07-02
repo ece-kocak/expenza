@@ -12,7 +12,8 @@ import 'dashboard_screen.dart' show categoryColor, categoryIcon, money;
 /// Tam işlem geçmişi — premium: tarihe göre gruplu, arama, kategori çipleri,
 /// sola kaydır→sil, dokun→düzenle.
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+  final VoidCallback? onTransactionAdded;
+  const HistoryScreen({super.key, this.onTransactionAdded});
 
   @override
   State<HistoryScreen> createState() => HistoryScreenState();
@@ -54,7 +55,20 @@ class HistoryScreenState extends State<HistoryScreen> {
   Future<void> _edit(TransactionModel tx) async {
     final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(
         builder: (_) => AddTransactionScreen(existing: tx)));
-    if (ok == true) refresh();
+    if (ok == true) {
+      refresh();
+      widget.onTransactionAdded?.call();
+    }
+  }
+
+  Future<void> _openAdd() async {
+    final added = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+    );
+    if (added == true) {
+      refresh();
+      widget.onTransactionAdded?.call();
+    }
   }
 
   /// occurred_on (YYYY-MM-DD) -> "Bugün" / "Dün" / "12 Haziran".
@@ -208,6 +222,21 @@ class HistoryScreenState extends State<HistoryScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 96),
+        child: Press(
+          onTap: _openAdd,
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.add, color: AppColors.onPrimary, size: 26),
+          ),
+        ),
       ),
     );
   }

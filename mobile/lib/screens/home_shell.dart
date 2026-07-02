@@ -35,22 +35,17 @@ class _HomeShellState extends State<HomeShell> {
     (Icons.person_outline, Icons.person, 'Profil'),
   ];
 
-  Future<void> _openAdd() async {
-    final added = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-    );
-    if (added == true) {
-      _dashKey.currentState?.refresh();
-      _budgetKey.currentState?.refresh();
-      _historyKey.currentState?.refresh();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final pages = [
       DashboardScreen(key: _dashKey, onLogout: widget.onLogout),
-      HistoryScreen(key: _historyKey),
+      HistoryScreen(
+        key: _historyKey,
+        onTransactionAdded: () {
+          _dashKey.currentState?.refresh();
+          _budgetKey.currentState?.refresh();
+        },
+      ),
       AnalyticsScreen(),
       BudgetsScreen(key: _budgetKey),
       ProfileScreen(onLogout: widget.onLogout),
@@ -58,21 +53,6 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       extendBody: true,
       body: IndexedStack(index: _index, children: pages),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Press(
-          onTap: _openAdd,
-          child: Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.add, color: AppColors.onPrimary, size: 26),
-          ),
-        ),
-      ),
       bottomNavigationBar: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
