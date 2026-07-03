@@ -33,6 +33,7 @@ class TransactionBase(BaseModel):
     category: Optional[CategoryEnum] = None  # None => model otomatik atar
     note: str = ""
     occurred_on: date = Field(default_factory=date.today)
+    is_recurring: bool = False
 
 
 class TransactionCreate(TransactionBase):
@@ -46,6 +47,7 @@ class TransactionUpdate(BaseModel):
     category: Optional[CategoryEnum] = None
     note: Optional[str] = None
     occurred_on: Optional[date] = None
+    is_recurring: Optional[bool] = None
 
 
 class TransactionOut(BaseModel):
@@ -55,6 +57,7 @@ class TransactionOut(BaseModel):
     type: TxType
     category: CategoryEnum
     auto_categorized: bool
+    is_recurring: bool
     note: str
     occurred_on: date
     created_at: datetime

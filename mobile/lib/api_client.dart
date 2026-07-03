@@ -99,6 +99,7 @@ class ApiClient {
     String? category,
     String? note,
     String? occurredOn,
+    bool? isRecurring,
   }) async {
     final body = <String, dynamic>{};
     if (amount != null) body['amount'] = amount;
@@ -106,6 +107,7 @@ class ApiClient {
     if (category != null) body['category'] = category;
     if (note != null) body['note'] = note;
     if (occurredOn != null) body['occurred_on'] = occurredOn;
+    if (isRecurring != null) body['is_recurring'] = isRecurring;
     final r = await http.put(_u('/transactions/$id'),
         headers: _headers, body: jsonEncode(body));
     if (r.statusCode >= 400) throw _err(r);
@@ -117,11 +119,13 @@ class ApiClient {
     String? category,
     String note = '',
     String? occurredOn,
+    bool isRecurring = false,
   }) async {
     final body = <String, dynamic>{
       'amount': amount,
       'type': type,
       'note': note,
+      'is_recurring': isRecurring,
     };
     if (category != null) body['category'] = category;
     if (occurredOn != null) body['occurred_on'] = occurredOn;

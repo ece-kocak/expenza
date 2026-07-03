@@ -384,7 +384,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                             color: AppColors.onSurface)),
                     const SizedBox(height: 2),
                     Text(
-                        '${t.category}${time != null ? ' · ${DateFormat('HH:mm').format(time)}' : ''}',
+                        '${t.category}${time != null && (time.hour != 0 || time.minute != 0) ? ' · ${DateFormat('HH:mm').format(time)}' : ''}',
                         style:
                             TextStyle(fontSize: 12, color: AppColors.outline)),
                   ],

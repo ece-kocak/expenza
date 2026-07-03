@@ -1,5 +1,7 @@
 """İşlem (gelir/gider) uçları. Kategori verilmezse hero model otomatik atar."""
 from typing import Optional
+from datetime import date
+import calendar
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import extract
@@ -13,6 +15,63 @@ from ..ml import categorizer
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
+def _generate_recurring_transactions(db: Session, user_id: int):
+    """Her ay tekrarlanan işlemleri otomatik üretir (lazy generation)."""
+    recurring_txs = db.query(models.Transaction).filter(
+        models.Transaction.user_id == user_id,
+        models.Transaction.is_recurring == True
+    ).all()
+    
+    today = date.today()
+    for tx in recurring_txs:
+        start_date = tx.occurred_on
+        if start_date >= today:
+            continue
+            
+        curr_year = start_date.year
+        curr_month = start_date.month
+        
+        while True:
+            curr_month += 1
+            if curr_month > 12:
+                curr_month = 1
+                curr_year += 1
+                
+            if curr_year > today.year or (curr_year == today.year and curr_month > today.month):
+                break
+                
+            max_day = calendar.monthrange(curr_year, curr_month)[1]
+            target_day = min(start_date.day, max_day)
+            target_date = date(curr_year, curr_month, target_day)
+            
+            if target_date > today:
+                break
+                
+            exists = db.query(models.Transaction).filter(
+                models.Transaction.user_id == user_id,
+                models.Transaction.is_recurring == True,
+                models.Transaction.type == tx.type,
+                models.Transaction.category == tx.category,
+                models.Transaction.amount == tx.amount,
+                models.Transaction.note == tx.note,
+                models.Transaction.occurred_on == target_date
+            ).first()
+            
+            if not exists:
+                new_tx = models.Transaction(
+                    user_id=user_id,
+                    amount=tx.amount,
+                    type=tx.type,
+                    category=tx.category,
+                    auto_categorized=tx.auto_categorized,
+                    is_recurring=True,
+                    note=tx.note,
+                    occurred_on=target_date
+                )
+                db.add(new_tx)
+                db.commit()
+
+
 @router.post("", response_model=schemas.TransactionOut, status_code=201)
 def create_transaction(
     payload: schemas.TransactionCreate,
@@ -21,7 +80,6 @@ def create_transaction(
 ):
     category = payload.category
     auto = False
-    # Kategori boş ve bu bir giderse: hero model nottan kategori tahmin eder.
     if category is None and payload.type == models.TxType.expense:
         predicted, _conf, _model = categorizer.categorize(payload.note)
         category = predicted
@@ -35,6 +93,7 @@ def create_transaction(
         type=payload.type,
         category=category,
         auto_categorized=auto,
+        is_recurring=payload.is_recurring,
         note=payload.note,
         occurred_on=payload.occurred_on,
     )
@@ -54,6 +113,7 @@ def list_transactions(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
+    _generate_recurring_transactions(db, user.id)
     query = db.query(models.Transaction).filter(
         models.Transaction.user_id == user.id
     )

@@ -27,6 +27,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   CategorySuggestion? _suggestion;
   bool _suggesting = false;
+  bool _isRecurring = false;
 
   bool get _isEdit => widget.existing != null;
   bool get _isIncome => _type == 'income';
@@ -40,6 +41,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _note.text = ex.note;
       _type = ex.type;
       _selectedCategory = ex.category;
+      _isRecurring = ex.isRecurring;
     }
     _note.addListener(_onNote);
   }
@@ -84,6 +86,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       if (!_isEdit) {
         _selectedCategory = null;
         _suggestion = null;
+        _isRecurring = false;
       }
     });
   }
@@ -128,6 +131,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           category: _selectedCategory ??
               (_isIncome ? 'Diğer' : widget.existing!.category),
           note: _note.text.trim(),
+          isRecurring: _isRecurring,
         );
       } else {
         await ApiClient.instance.addTransaction(
@@ -135,6 +139,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           type: _type,
           category: _selectedCategory, // null → backend modelle/Diğer atar
           note: _note.text.trim(),
+          isRecurring: _isRecurring,
         );
       }
       if (mounted) Navigator.of(context).pop(true);
@@ -293,6 +298,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                 ),
               ),
+              if (_isIncome) ...[
+                const SizedBox(height: 18),
+                _recurringCheckbox(),
+              ],
               if (!_isIncome) _suggestionCard(),
             ],
           ),
@@ -582,6 +591,84 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _recurringCheckbox() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.glassBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Gelir kaydedilsin mi',
+              style: TextStyle(fontSize: 14, color: AppColors.onSurface),
+            ),
+          ),
+          Checkbox(
+            value: _isRecurring,
+            activeColor: const Color(0xFF46F1C5),
+            checkColor: Colors.black,
+            onChanged: (val) async {
+              if (val == true) {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) {
+                    return AlertDialog(
+                      backgroundColor: AppColors.surface,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: AppColors.glassBorder)),
+                      title: Text(
+                        'Gelir Kaydedilsin Mi?',
+                        style: TextStyle(
+                            color: AppColors.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      content: Text(
+                        'Kabul ederseniz her ay otomatik olarak gelir olarak hesaplanacaktır. Devam etmek istiyor musunuz?',
+                        style: TextStyle(
+                            color: AppColors.onSurfaceVariant, fontSize: 13, height: 1.5),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(
+                            'Hayır',
+                            style: TextStyle(
+                                color: AppColors.outline, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text(
+                            'Evet',
+                            style: TextStyle(
+                                color: Color(0xFF46F1C5), fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (confirm == true) {
+                  setState(() => _isRecurring = true);
+                } else {
+                  setState(() => _isRecurring = false);
+                }
+              } else {
+                setState(() => _isRecurring = false);
+              }
+            },
+          ),
+        ],
       ),
     );
   }

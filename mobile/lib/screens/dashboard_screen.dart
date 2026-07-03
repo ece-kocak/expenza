@@ -88,9 +88,10 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   String get _greeting {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Günaydın';
-    if (h < 18) return 'İyi günler';
-    return 'İyi akşamlar';
+    if (h >= 5 && h < 12) return 'Günaydın';
+    if (h >= 12 && h < 18) return 'İyi günler';
+    if (h >= 18 && h < 22) return 'İyi akşamlar';
+    return 'İyi geceler';
   }
 
   @override
@@ -117,7 +118,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 .fold(0.0, (s, t) => s + t.amount);
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(24, 56, 24, 32),
+              padding: const EdgeInsets.fromLTRB(24, 56, 24, 120),
               children: [
                 Rise(child: _header(d.name)),
                 const SizedBox(height: 44),

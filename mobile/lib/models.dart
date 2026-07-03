@@ -17,6 +17,7 @@ class TransactionModel {
   final String type; // income | expense
   final String category;
   final bool autoCategorized;
+  final bool isRecurring;
   final String note;
   final String occurredOn;
 
@@ -26,6 +27,7 @@ class TransactionModel {
     required this.type,
     required this.category,
     required this.autoCategorized,
+    required this.isRecurring,
     required this.note,
     required this.occurredOn,
   });
@@ -36,6 +38,7 @@ class TransactionModel {
         type: j['type'],
         category: j['category'],
         autoCategorized: j['auto_categorized'] ?? false,
+        isRecurring: j['is_recurring'] ?? false,
         note: j['note'] ?? '',
         occurredOn: j['occurred_on'] ?? '',
       );

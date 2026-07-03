@@ -70,6 +70,7 @@ class Transaction(Base):
     )
     # Modelin kategoriyi otomatik atayıp atamadığını ve güven skorunu izlemek için.
     auto_categorized: Mapped[bool] = mapped_column(default=False)
+    is_recurring: Mapped[bool] = mapped_column(default=False)
     note: Mapped[str] = mapped_column(String(500), default="")
     occurred_on: Mapped[date] = mapped_column(Date, default=date.today)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
