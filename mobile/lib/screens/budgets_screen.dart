@@ -196,12 +196,17 @@ class BudgetsScreenState extends State<BudgetsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(limit == 0 ? 'AYLIK TOPLAM BÜTÇE (LİMİT BELİRLE)' : 'TOPLAM AYLIK BÜTÇE',
-                    style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.4,
-                        color: AppColors.onSurfaceVariant)),
+                Expanded(
+                  child: Text(limit == 0 ? 'AYLIK TOPLAM BÜTÇE (LİMİT BELİRLE)' : 'TOPLAM AYLIK BÜTÇE',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.4,
+                          color: AppColors.onSurfaceVariant)),
+                ),
+                const SizedBox(width: 8),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 9, vertical: 3),

@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
-import 'add_transaction_screen.dart';
 import 'analytics_screen.dart';
 import 'budgets_screen.dart';
 import 'dashboard_screen.dart';
