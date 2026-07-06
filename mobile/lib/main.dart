@@ -10,6 +10,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Türkçe tarih/sayı biçimlendirmesi için yerel veriyi başlat (ay adları vb.).
   await initializeDateFormatting('tr_TR', null);
+  // Döviz kurlarını asenkron olarak arka planda güncelle (varsayılan kurlar hazırda bekliyor)
+  CurrencyService.updateRates();
   runApp(const ExpenzaApp());
 }
 

@@ -13,14 +13,16 @@ final _grp = NumberFormat('#,##0', 'tr_TR');
 
 /// Premium para gösterimi: işaret + ₺ + binlik ayraç, küsurat varsa 2 hane.
 String money(double v, {bool showSign = false}) {
-  final neg = v < 0;
-  final abs = v.abs();
+  final converted = CurrencyService.convertFromTry(v, currencyNotifier.value);
+  final neg = converted < 0;
+  final abs = converted.abs();
   final whole = abs.truncate();
   final cents = ((abs - whole) * 100).round();
   final sign = neg ? '−' : (showSign ? '+' : '');
   final symbol = currencyNotifier.value;
   final base = '$sign$symbol${_grp.format(whole)}';
-  return cents == 0 ? base : '$base,${cents.toString().padLeft(2, '0')}';
+  final sep = symbol == '₺' ? ',' : '.';
+  return cents == 0 ? base : '$base$sep${cents.toString().padLeft(2, '0')}';
 }
 
 /// Kategori -> ikon (diğer ekranlar da kullanır).
@@ -209,10 +211,13 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   // ---- Bakiye (kart yok) ----
   Widget _balance(double balance) {
-    final neg = balance < 0;
-    final abs = balance.abs();
+    final converted = CurrencyService.convertFromTry(balance, currencyNotifier.value);
+    final neg = converted < 0;
+    final abs = converted.abs();
     final whole = abs.truncate();
     final cents = ((abs - whole) * 100).round();
+    final symbol = currencyNotifier.value;
+    final sep = symbol == '₺' ? ',' : '.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -226,7 +231,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('${neg ? '−' : ''}₺${_grp.format(whole)}',
+            Text('${neg ? '−' : ''}$symbol${_grp.format(whole)}',
                 style: TextStyle(
                     fontSize: 52,
                     fontWeight: FontWeight.w800,
@@ -236,7 +241,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     fontFeatures: kTnum)),
             Padding(
               padding: const EdgeInsets.only(bottom: 6, left: 2),
-              child: Text(',${cents.toString().padLeft(2, '0')}',
+              child: Text('$sep${cents.toString().padLeft(2, '0')}',
                   style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,

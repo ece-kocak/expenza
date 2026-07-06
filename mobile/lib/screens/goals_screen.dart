@@ -620,11 +620,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
               ),
             ),
             const SizedBox(height: 18),
-            _fieldLabel('HEDEF TUTAR (₺)'),
+            _fieldLabel('HEDEF TUTAR (${currencyNotifier.value})'),
             _inputBox(
               child: Row(
                 children: [
-                  Text('₺',
+                  Text(currencyNotifier.value,
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -650,10 +650,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
             const SizedBox(height: 24),
             _primaryButton('Hedef Oluştur', () async {
               final name = nameCtrl.text.trim();
-              final target =
+              final enteredTarget =
                   double.tryParse(targetCtrl.text.replaceAll(',', '.'));
-              if (name.isEmpty || target == null || target <= 0) return;
-              await ApiClient.instance.createGoal(name, target);
+              if (name.isEmpty || enteredTarget == null || enteredTarget <= 0) return;
+              final targetInTry = CurrencyService.convertToTry(enteredTarget, currencyNotifier.value);
+              await ApiClient.instance.createGoal(name, targetInTry);
               if (ctx.mounted) Navigator.pop(ctx);
               _refresh();
             }),
@@ -663,8 +664,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   Future<void> _openContribute(GoalModel g, Color color) async {
     final amtCtrl = TextEditingController();
-    final remain = g.remaining;
-    final quick = [500.0, 1000.0, 2500.0].where((q) => q <= remain).toList();
+    final rate = CurrencyService.rates[currencyNotifier.value] ?? 1.0;
+    final remain = g.remaining * rate;
+    final quick = [500.0, 1000.0, 2500.0]
+        .map((q) => q * rate)
+        .where((q) => q <= remain)
+        .toList();
     if (remain > 0 && !quick.contains(remain)) quick.add(remain);
 
     await _sheet((ctx, setSheet) => Column(
@@ -674,17 +679,17 @@ class _GoalsScreenState extends State<GoalsScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 18),
               child: Text(
-                  'Kalan ${money(remain)} · Hedef ${money(g.targetAmount)}',
+                  'Kalan ${money(g.remaining)} · Hedef ${money(g.targetAmount)}',
                   style: TextStyle(
                       fontSize: 12.5,
                       color: AppColors.outline,
                       fontFeatures: kTnum)),
             ),
-            _fieldLabel('TUTAR (₺)'),
+            _fieldLabel('TUTAR (${currencyNotifier.value})'),
             _inputBox(
               child: Row(
                 children: [
-                  Text('₺',
+                  Text(currencyNotifier.value,
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -724,7 +729,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                   color: AppColors.surfaceContainerHigh)),
-                          child: Text('+${money(q)}',
+                          child: Text('+${currencyNotifier.value}${q.toStringAsFixed(0)}',
                               style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -736,9 +741,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
             ),
             const SizedBox(height: 24),
             _primaryButton('Ekle', () async {
-              final v = double.tryParse(amtCtrl.text.replaceAll(',', '.'));
-              if (v == null || v <= 0) return;
-              await ApiClient.instance.contributeGoal(g.id, v);
+              final enteredAmt = double.tryParse(amtCtrl.text.replaceAll(',', '.'));
+              if (enteredAmt == null || enteredAmt <= 0) return;
+              final amtInTry = CurrencyService.convertToTry(enteredAmt, currencyNotifier.value);
+              await ApiClient.instance.contributeGoal(g.id, amtInTry);
               if (ctx.mounted) Navigator.pop(ctx);
               _refresh();
             }),

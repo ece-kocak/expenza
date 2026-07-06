@@ -37,7 +37,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.initState();
     final ex = widget.existing;
     if (ex != null) {
-      _amount.text = ex.amount.toStringAsFixed(ex.amount % 1 == 0 ? 0 : 2);
+      final displayAmount = CurrencyService.convertFromTry(ex.amount, currencyNotifier.value);
+      _amount.text = displayAmount.toStringAsFixed(displayAmount % 1 == 0 ? 0 : 2);
       _note.text = ex.note;
       _type = ex.type;
       _selectedCategory = ex.category;
@@ -112,11 +113,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<void> _save() async {
-    final amount = double.tryParse(_amount.text.replaceAll(',', '.'));
-    if (amount == null || amount <= 0) {
+    final enteredAmount = double.tryParse(_amount.text.replaceAll(',', '.'));
+    if (enteredAmount == null || enteredAmount <= 0) {
       _toast('Lütfen tutar gir', error: true);
       return;
     }
+    final amountInTry = CurrencyService.convertToTry(enteredAmount, currencyNotifier.value);
     if (!_isIncome && _selectedCategory == null) {
       _toast('Lütfen kategori seç', error: true);
       return;
@@ -126,7 +128,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       if (_isEdit) {
         await ApiClient.instance.updateTransaction(
           widget.existing!.id,
-          amount: amount,
+          amount: amountInTry,
           type: _type,
           category: _selectedCategory ??
               (_isIncome ? 'Diğer' : widget.existing!.category),
@@ -135,7 +137,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         );
       } else {
         await ApiClient.instance.addTransaction(
-          amount: amount,
+          amount: amountInTry,
           type: _type,
           category: _selectedCategory, // null → backend modelle/Diğer atar
           note: _note.text.trim(),
@@ -204,7 +206,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(_isIncome ? '+₺' : '−₺',
+                      Text(_isIncome ? '+${currencyNotifier.value}' : '−${currencyNotifier.value}',
                           style: TextStyle(
                               fontSize: 34,
                               fontWeight: FontWeight.w700,

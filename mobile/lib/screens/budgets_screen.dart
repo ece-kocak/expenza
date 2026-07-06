@@ -413,8 +413,11 @@ class BudgetsScreenState extends State<BudgetsScreen> {
     }
 
     String chosen = isTotal ? 'Toplam' : (editing?.category ?? available.first);
+    final initialLimit = editing != null && editing.monthlyLimit > 0
+        ? CurrencyService.convertFromTry(editing.monthlyLimit, currencyNotifier.value)
+        : 0.0;
     final limitCtrl = TextEditingController(
-        text: editing != null && editing.monthlyLimit > 0 ? editing.monthlyLimit.toStringAsFixed(0) : '');
+        text: initialLimit > 0 ? initialLimit.toStringAsFixed(0) : '');
 
     await showModalBottomSheet<void>(
       context: context,
@@ -591,11 +594,12 @@ class BudgetsScreenState extends State<BudgetsScreen> {
                         Expanded(
                           child: Press(
                             onTap: () async {
-                              final lim = double.tryParse(
+                              final enteredLim = double.tryParse(
                                   limitCtrl.text.replaceAll(',', '.'));
-                              if (lim == null || lim <= 0) return;
+                              if (enteredLim == null || enteredLim <= 0) return;
+                              final limInTry = CurrencyService.convertToTry(enteredLim, currencyNotifier.value);
                               await ApiClient.instance
-                                  .upsertBudget(chosen, lim);
+                                  .upsertBudget(chosen, limInTry);
                               if (ctx.mounted) Navigator.pop(ctx);
                               refresh();
                             },
