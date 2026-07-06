@@ -475,7 +475,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(width: 4),
             Icon(Icons.chevron_right, size: 18, color: AppColors.outline),
           ],
-          if (trailing != null) trailing,
+          ?trailing,
         ],
       ),
     );

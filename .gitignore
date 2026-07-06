@@ -1,5 +1,6 @@
 # Python / backend
 backend/.venv/
+backend/venv/
 __pycache__/
 *.pyc
 backend/expenza.db
