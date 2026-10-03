@@ -388,14 +388,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          _settingRow(
-            _infoColor,
-            isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-            'Tema',
-            subtitle: isDark ? 'Koyu mod' : 'Açık mod',
-            trailing: _miniSwitch(isDark, (v) {
-              themeModeNotifier.value = v ? ThemeMode.dark : ThemeMode.light;
-            }),
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeModeNotifier,
+            builder: (context, mode, _) {
+              final dark = mode == ThemeMode.dark;
+              return _settingRow(
+                _infoColor,
+                dark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                'Tema',
+                subtitle: dark ? 'Koyu mod' : 'Açık mod',
+                trailing: _miniSwitch(dark, (_) => toggleThemeMode()),
+              );
+            },
           ),
           _divider(),
           _settingRow(_okColor, Icons.attach_money, 'Para Birimi',

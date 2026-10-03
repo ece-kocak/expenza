@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../api_client.dart';
 import '../models.dart';
+import '../ocr_service.dart';
 import '../theme.dart';
 import 'dashboard_screen.dart' show categoryColor, categoryIcon;
 
@@ -96,6 +98,70 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => _selectedCategory = c);
   }
 
+  // Fiş OCR: kamera/galeriden fiş oku → tutar+işyeri doldur → model kategorize etsin.
+  Future<void> _scanReceipt() async {
+    // Kaynak seç: kamera / galeri
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(99))),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: Icon(Icons.photo_camera_outlined,
+                  color: AppColors.onSurface),
+              title: Text('Kamera',
+                  style: TextStyle(color: AppColors.onSurface)),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading:
+                  Icon(Icons.photo_library_outlined, color: AppColors.onSurface),
+              title: Text('Galeriden seç',
+                  style: TextStyle(color: AppColors.onSurface)),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    _toast('Fiş okunuyor…');
+    try {
+      final scan = await OcrService.scan(source);
+      if (scan == null) return;
+      setState(() {
+        if (scan.amount != null) {
+          // Fiş tutarı TL; alan seçili para biriminde, kaydederken TL'ye geri çevrilir.
+          final shown =
+              CurrencyService.convertFromTry(scan.amount!, currencyNotifier.value);
+          _amount.text = shown.toStringAsFixed(shown % 1 == 0 ? 0 : 2);
+        }
+        if (scan.merchant.isNotEmpty) _note.text = scan.merchant;
+      });
+      if (scan.amount == null) {
+        _toast('Tutar okunamadı, elle gir', error: true);
+      } else {
+        _toast('Fiş okundu — kontrol edip kaydet');
+      }
+    } catch (e) {
+      _toast('Fiş okunamadı: ${e.toString()}', error: true);
+    }
+  }
+
   void _toast(String msg, {bool error = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Row(
@@ -182,15 +248,45 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       isDark
                           ? Icons.dark_mode_outlined
                           : Icons.light_mode_outlined,
-                      () => themeModeNotifier.value =
-                          isDark ? ThemeMode.light : ThemeMode.dark),
+                      toggleThemeMode),
                 ],
               ),
               const SizedBox(height: 24),
 
               // Gider/Gelir segmenti
               _segmented(),
-              const SizedBox(height: 26),
+              const SizedBox(height: 14),
+
+              // Fiş tara (gider + mobil)
+              if (!_isIncome && OcrService.supported) ...[
+                Press(
+                  onTap: _scanReceipt,
+                  child: Container(
+                    height: 46,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.surfaceContainerHigh),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.document_scanner_outlined,
+                            size: 18, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Text('Fiş Tara',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.onSurface)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ] else
+                const SizedBox(height: 12),
 
               // Tutar
               Column(

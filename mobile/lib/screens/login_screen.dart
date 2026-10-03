@@ -54,8 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: Press(
-                  onTap: () => setState(() => themeModeNotifier.value =
-                      isDark ? ThemeMode.light : ThemeMode.dark),
+                  onTap: () => setState(toggleThemeMode),
                   child: Container(
                     width: 40,
                     height: 40,

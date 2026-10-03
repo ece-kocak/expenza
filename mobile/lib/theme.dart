@@ -49,6 +49,13 @@ class CurrencyService {
   }
 }
 
+/// Temayı ANLIK değeri okuyarak tersine çevirir (yakalanmış eski değere güvenmez).
+void toggleThemeMode() {
+  themeModeNotifier.value = themeModeNotifier.value == ThemeMode.dark
+      ? ThemeMode.light
+      : ThemeMode.dark;
+}
+
 /// Expenza "Quiet Premium" renk paleti.
 ///
 /// Tasarım dili: monokrom, kartsız, hairline çizgiler, tipografi-ağırlıklı.

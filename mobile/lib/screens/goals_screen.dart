@@ -140,8 +140,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         ),
         const SizedBox(width: 8),
         Press(
-          onTap: () => themeModeNotifier.value =
-              isDark ? ThemeMode.light : ThemeMode.dark,
+          onTap: toggleThemeMode,
           child: Container(
             width: 40,
             height: 40,

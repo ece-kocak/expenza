@@ -46,11 +46,12 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 
 ### Altyapı
 
-- [ ] `ALT-05` Diğer kopyadaki (`themlie/expenza`) commit'lenmemiş çalışmalar bu repoya taşınmalı: fiş tarama (`ocr_service.dart`, `image_picker`, `google_mlkit_text_recognition`, iOS izinleri), `toggleThemeMode` düzeltmesi, README ve güncel yol haritası. Yedi ekran dosyasında çakışma bekleniyor.
-- [ ] `ALT-06` Repo temizliği: `backend/venv/` (8138 dosya, Mac'e ait Python 3.9 ortamı) ve `mobile/macos/Flutter/ephemeral/` git takibinden çıkarılmalı (`git rm --cached`). İkisi de geliştiricinin yerel yolunu içeriyor.
+- [x] `ALT-05` Diğer kopyadaki (`themlie/expenza`) commit'lenmemiş çalışmalar bu repoya taşınmalı: fiş tarama (`ocr_service.dart`, `image_picker`, `google_mlkit_text_recognition`, iOS izinleri), `toggleThemeMode` düzeltmesi, README ve güncel yol haritası. Fiş tarama ve tema taşındı; fişten okunan TL tutarı artık seçili para birimine çevriliyor. Yol haritasının (`YOL_HARITASI.md`) taşınması ayrıca kararlaştırılacak.
+- [x] `ALT-06` Repo temizliği: `backend/venv/` (8138 dosya, Mac'e ait Python 3.9 ortamı) ve `mobile/macos/Flutter/ephemeral/` git takibinden çıkarılmalı (`git rm --cached`). İkisi de geliştiricinin yerel yolunu içeriyor.
 - [ ] `ALT-07` Backend'de hiç test yok. Yapılacak: pytest ile kayıt ve giriş, token, başka kullanıcının kaydına erişim, işlem uçları, bütçe hesabı, tekrarlayan işlem ve analitik testleri.
 - [ ] `ALT-08` Tek widget testi başarısız (`mobile/test/widget_test.dart:9`): giriş ekranında iki "Giriş Yap" metni var, test bir tane bekliyor.
 - [ ] `ALT-09` CI yok. Yapılacak: GitHub Actions ile her push'ta pytest, `flutter analyze` ve `flutter test`.
+- [ ] `ALT-10` Fiş tarama (ML Kit) iOS'ta büyük olasılıkla en az iOS 15.5 hedefi istiyor; `ios/Podfile` repoda yok ve iOS derlemesi Mac olmadan denenemedi. Mac'te ilk `flutter run` sırasında kontrol edilmeli (belirsiz).
 
 ## P2
 
@@ -79,7 +80,7 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 - [ ] `KOD-01` Para `float` olarak saklanıyor (`models.py:66`). Kuruş cinsinden tam sayı ya da `Decimal` düşünülmeli.
 - [ ] `KOD-02` Kategori listesi en az altı yerde ayrı tutuluyor (`CategoryEnum`, `KEYWORDS`, `generate_data.DATA`, `kCategories`, profil metni, renk/ikon eşlemeleri). `Toplam` bir kategori değil, `CategoryEnum`'dan ayrılmalı; şu an API onu işlem kategorisi olarak da kabul ediyor.
 - [ ] `KOD-03` Ekran dosyaları 500-840 satır ve arayüz, API çağrısı ve iş kuralı aynı yerde. Backend'de iş kuralları router'larda; servis katmanı yok.
-- [x] `KOD-04` Kullanılmayan bağımlılıklar: `pydantic-settings`, çalışma zamanında `pandas` (sadece eğitimde gerekli), `provider`, `cupertino_icons`. Kullanılmayan kod: `ExpenzaAppBar` (`home_shell.dart:102`).
+- [x] `KOD-04` Kullanılmayan bağımlılıklar: `pydantic-settings`, çalışma zamanında `pandas` (sadece eğitimde gerekli), `provider`. Kullanılmayan kod: `ExpenzaAppBar` (`home_shell.dart:102`). Not: `cupertino_icons` önce kaldırıldı, sonra geri eklendi; uygulama kodu kullanmasa da Flutter'ın Cupertino bileşenleri bu fonta ihtiyaç duyuyor.
 - [ ] `KOD-05` Gemini çağrısı iki ayrı yerde ve iki farklı model adıyla yazılmış (`chat.py`, `categorizer.py`). Tek modülde toplanmalı.
 - [ ] `KOD-06` Performans: tekrarlayan işlem üretimindeki N+1 sorgu ve satır başına commit; açılışta beş sekmenin birden yüklenmesi (3 kez `GET /transactions`); analitik uçlarının bütün işlemleri belleğe çekmesi; `chat.py`'de `async` fonksiyon içinde senkron veritabanı sorgusu; sayfalama olmaması.
 - [ ] `KOD-07` Güncel olmayan belgeler: `expenza_yol_haritasi.md` Go, PostgreSQL ve Riverpod anlatıyor; `categorizer.py` başındaki açıklama "STUB ile çalışır" diyor.

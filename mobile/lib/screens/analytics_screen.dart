@@ -127,8 +127,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ],
         ),
         Press(
-          onTap: () => themeModeNotifier.value =
-              isDark ? ThemeMode.light : ThemeMode.dark,
+          onTap: toggleThemeMode,
           child: Container(
             width: 40,
             height: 40,

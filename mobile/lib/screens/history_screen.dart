@@ -119,8 +119,7 @@ class HistoryScreenState extends State<HistoryScreen> {
                       ],
                     ),
                     Press(
-                      onTap: () => themeModeNotifier.value =
-                          isDark ? ThemeMode.light : ThemeMode.dark,
+                      onTap: toggleThemeMode,
                       child: Container(
                         width: 40,
                         height: 40,

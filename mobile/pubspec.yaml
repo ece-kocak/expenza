@@ -31,10 +31,14 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Uygulama kodu kullanmasa da Flutter'ın Cupertino bileşenleri bu ikon fontuna ihtiyaç duyar.
+  cupertino_icons: ^1.0.8
   http: ^1.6.0
   intl: ^0.20.3
   fl_chart: ^1.2.0
   google_fonts: ^8.1.0
+  image_picker: ^1.2.3
+  google_mlkit_text_recognition: ^0.15.1
 
 dev_dependencies:
   flutter_test:
