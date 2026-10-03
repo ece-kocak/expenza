@@ -12,6 +12,7 @@ from datetime import date, timedelta
 
 from app.auth import hash_password
 from app.database import SessionLocal
+from app.migrate import upgrade_database
 from app.models import CategoryEnum, Transaction, TxType, User
 
 random.seed(7)
@@ -52,6 +53,7 @@ def get_or_create_user(db) -> User:
 
 
 def main() -> None:
+    upgrade_database()  # backend hiç çalıştırılmadan da kullanılabilsin
     db = SessionLocal()
     try:
         user = get_or_create_user(db)

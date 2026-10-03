@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .database import Base, engine
+from .migrate import upgrade_database
 from .routers import (
     analytics,
     auth_router,
@@ -13,8 +13,8 @@ from .routers import (
     chat,
 )
 
-# MVP: tabloları açılışta oluştur. (İleride Alembic migration'a geçilebilir.)
-Base.metadata.create_all(bind=engine)
+# Şemayı açılışta en son migration'a getir (backend/migrations).
+upgrade_database()
 
 app = FastAPI(
     title="Expenza API",
