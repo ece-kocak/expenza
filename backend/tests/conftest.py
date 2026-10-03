@@ -33,7 +33,13 @@ def client():
 def _clean_db():
     yield
     with SessionLocal() as db:
-        for model in (models.Transaction, models.Budget, models.Goal, models.User):
+        for model in (
+            models.Transaction,
+            models.RecurringSeries,
+            models.Budget,
+            models.Goal,
+            models.User,
+        ):
             db.query(model).delete()
         db.commit()
 

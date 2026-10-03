@@ -58,9 +58,25 @@ class TransactionOut(BaseModel):
     category: CategoryEnum
     auto_categorized: bool
     is_recurring: bool
+    series_id: Optional[int] = None
     note: str
     occurred_on: date
     created_at: datetime
+
+
+class CategoryTotal(BaseModel):
+    category: str
+    total: float
+
+
+class TransactionSummary(BaseModel):
+    balance: float           # tüm zamanlar: gelir - gider
+    total_income: float
+    total_expense: float
+    month: str               # "YYYY-MM", içinde bulunulan ay
+    month_income: float
+    month_expense: float
+    month_by_category: list[CategoryTotal]  # bu ayın giderleri, büyükten küçüğe
 
 
 # ---- Budgets ----

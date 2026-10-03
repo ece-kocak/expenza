@@ -67,3 +67,52 @@ def test_legacy_database_is_upgraded_without_data_loss(tmp_path):
     assert rows == [("kahve", 0)]
     head = _run(["-m", "alembic", "heads"], db).stdout.split()[0]
     assert version == head
+
+
+def test_old_recurring_rows_are_linked_to_series(tmp_path):
+    db = tmp_path / "recurring.db"
+    r = _run(["-m", "alembic", "upgrade", "0002"], db)
+    assert r.returncode == 0, r.stderr
+
+    con = sqlite3.connect(db)
+    con.execute(
+        "INSERT INTO users (id, email, hashed_password, display_name) VALUES (1, 'a@example.com', 'x', 'A')"
+    )
+    rows = [
+        # (tutar, not, tarih, is_recurring) - eski kodun ürettiği türden kayıtlar
+        (1000, "Maaş", "2026-01-31", 1),
+        (1000, "Maaş", "2026-02-28", 1),
+        (1000, "Maaş", "2026-03-28", 1),  # 28'den kayan kopya
+        (1000, "Maaş", "2026-03-31", 1),
+        (1000, "Maaş", "2026-03-31", 1),  # aynı güne düşen birebir kopya
+        (300, "Kira", "2026-02-01", 1),
+        (50, "kahve", "2026-02-02", 0),
+    ]
+    con.executemany(
+        "INSERT INTO transactions (user_id, amount, type, category, auto_categorized, is_recurring, note, occurred_on) "
+        "VALUES (1, ?, 'income', 'diger', 0, ?, ?, ?)",
+        [(amount, flag, note, day) for amount, note, day, flag in rows],
+    )
+    con.commit()
+    con.close()
+
+    r = _run("from app.migrate import upgrade_database; upgrade_database()", db)
+    assert r.returncode == 0, r.stderr
+
+    con = sqlite3.connect(db)
+    series = con.execute(
+        "SELECT note, day_of_month, last_generated_on, active FROM recurring_series ORDER BY note"
+    ).fetchall()
+    linked = con.execute(
+        "SELECT occurred_on FROM transactions WHERE note = 'Maaş' AND series_id IS NOT NULL ORDER BY occurred_on"
+    ).fetchall()
+    unlinked = con.execute(
+        "SELECT occurred_on, is_recurring FROM transactions WHERE note = 'Maaş' AND series_id IS NULL"
+    ).fetchall()
+    total = con.execute("SELECT count(*) FROM transactions").fetchone()[0]
+    con.close()
+
+    assert series == [("Kira", 1, "2026-02-01", 1), ("Maaş", 31, "2026-03-31", 1)]
+    assert [d for (d,) in linked] == ["2026-01-31", "2026-02-28", "2026-03-28", "2026-03-31"]
+    assert unlinked == [("2026-03-31", 0)]
+    assert total == len(rows)  # hiçbir kayıt silinmedi

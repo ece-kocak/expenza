@@ -6,6 +6,9 @@ __pycache__/
 backend/expenza.db
 backend/ml_training/data/
 .env
+.coverage
+htmlcov/
+.pytest_cache/
 
 # Flutter / mobile
 mobile/.dart_tool/

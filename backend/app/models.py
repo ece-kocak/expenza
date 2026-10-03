@@ -15,6 +15,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -58,8 +59,35 @@ class User(Base):
     )
 
 
+class RecurringSeries(Base):
+    """Her ay aynı gün tekrarlanan işlemin şablonu (maaş, kira, abonelik gibi).
+
+    Seriye ait işlemler app/recurring.py tarafından üretilir. last_generated_on en son
+    üretilen ayın tarihidir; silinen bir kopya bu yüzden yeniden üretilmez.
+    """
+
+    __tablename__ = "recurring_series"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    amount: Mapped[float] = mapped_column(Float)
+    type: Mapped[TxType] = mapped_column(Enum(TxType))
+    category: Mapped[CategoryEnum] = mapped_column(Enum(CategoryEnum))
+    note: Mapped[str] = mapped_column(String(500), default="")
+    # Kısa aylarda ayın son gününe kayar; sonraki uzun ayda yine bu güne döner.
+    day_of_month: Mapped[int] = mapped_column(Integer)
+    start_on: Mapped[date] = mapped_column(Date)
+    last_generated_on: Mapped[date] = mapped_column(Date)
+    active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class Transaction(Base):
     __tablename__ = "transactions"
+    # Aynı seriden aynı güne iki kayıt düşemez (eşzamanlı üretimde çift kaydı engeller).
+    __table_args__ = (
+        UniqueConstraint("series_id", "occurred_on", name="uq_transactions_series_day"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
@@ -70,12 +98,19 @@ class Transaction(Base):
     )
     # Modelin kategoriyi otomatik atayıp atamadığını ve güven skorunu izlemek için.
     auto_categorized: Mapped[bool] = mapped_column(default=False)
+    # Aktif bir tekrarlayan seriye ait mi? Seri durdurulunca False yapılır.
     is_recurring: Mapped[bool] = mapped_column(default=False)
+    series_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("recurring_series.id", name="fk_transactions_series_id"),
+        nullable=True,
+        index=True,
+    )
     note: Mapped[str] = mapped_column(String(500), default="")
     occurred_on: Mapped[date] = mapped_column(Date, default=date.today)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="transactions")
+    series: Mapped[Optional["RecurringSeries"]] = relationship()
 
 
 class Budget(Base):

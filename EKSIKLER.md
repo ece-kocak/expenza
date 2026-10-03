@@ -26,9 +26,9 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 
 ### İşlev hataları
 
-- [ ] `HATA-01` Tekrarlayan işlemler çift kayıt üretiyor (`backend/app/routers/transactions.py`, `_generate_recurring_transactions`). Üretilen kopyalar da `is_recurring=True` olduğu için kaynak gibi işleniyor. Ayın 29-31'inde başlayan seriler kısa aylardan sonra iki kez yazılıyor; notu ya da tutarı düzenlenen seriler yeni kopyalar üretiyor; silinen bir kopya bir sonraki listelemede geri geliyor.
-- [ ] `HATA-02` Aynı fonksiyon `GET /transactions` içinde çalışıyor, yani okuma isteği veritabanına yazıyor. Uygulama açılışta bu ucu aynı anda üç kez çağırıyor; benzersizlik kısıtı olmadığı için eşzamanlı isteklerde aynı kopya iki kez oluşabilir. Yapılacak: seriyi ayrı bir kayıt olarak modellemek, üretimi GET'ten çıkarmak, benzersizlik kısıtı eklemek.
-- [ ] `HATA-03` Ana sayfadaki bakiye sadece son 200 işlemden hesaplanıyor (`mobile/lib/screens/dashboard_screen.dart:79`, `115-120`; `api_client.dart:80`). Yapılacak: bakiye ve özetler için backend'de bir özet ucu.
+- [x] `HATA-01` Tekrarlayan işlemler çift kayıt üretiyor (`backend/app/routers/transactions.py`, `_generate_recurring_transactions`). Üretilen kopyalar da `is_recurring=True` olduğu için kaynak gibi işleniyor. Ayın 29-31'inde başlayan seriler kısa aylardan sonra iki kez yazılıyor; notu ya da tutarı düzenlenen seriler yeni kopyalar üretiyor; silinen bir kopya bir sonraki listelemede geri geliyor. Düzeltildi: tekrarlayan işlemler artık `recurring_series` tablosunda birer seri; kopyalar serinin gününden üretiliyor (`app/recurring.py`, migration 0003).
+- [x] `HATA-02` Aynı fonksiyon `GET /transactions` içinde çalışıyor, yani okuma isteği veritabanına yazıyor. Uygulama açılışta bu ucu aynı anda üç kez çağırıyor; benzersizlik kısıtı olmadığı için eşzamanlı isteklerde aynı kopya iki kez oluşabilir. Yapılacak: seriyi ayrı bir kayıt olarak modellemek, üretimi GET'ten çıkarmak, benzersizlik kısıtı eklemek. Düzeltildi: üretim GET'ten çıktı, açılışta ve saatte bir arka planda çalışıyor; `(series_id, occurred_on)` benzersiz. Eski kayıtlar migration'da serilere bağlandı, aynı güne düşen kopyalar silinmeden seriden ayrıldı.
+- [x] `HATA-03` Ana sayfadaki bakiye sadece son 200 işlemden hesaplanıyor (`mobile/lib/screens/dashboard_screen.dart:79`, `115-120`; `api_client.dart:80`). Yapılacak: bakiye ve özetler için backend'de bir özet ucu. Düzeltildi: `GET /transactions/summary` eklendi. Ayrıca ana sayfadaki grafik başlığında ay adı yazdığı halde son 200 işlemin tamamını gösteriyordu; artık sadece bu ayı gösteriyor. Analitik ekranındaki "En Çok Harcanan Kategoriler" hâlâ son 200 işlemden hesaplanıyor (P2).
 - [ ] `HATA-04` Android release derlemesinde `INTERNET` izni yok (`mobile/android/app/src/main/AndroidManifest.xml`); izin sadece debug ve profile manifestlerinde. Release APK backend'e bağlanamaz.
 - [ ] `HATA-05` Kategori tahmini `gemini-1.5-flash` adını sabit kullanıyor (`backend/app/ml/categorizer.py:146`). Modelin hâlâ hizmette olup olmadığı belirsiz; değilse her öneri önce başarısız bir çağrı yapıp sonra yerel modele düşer. Yapılacak: model adlarını ayara taşımak (bkz. `TEZ-02`).
 
@@ -59,9 +59,10 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 
 - [ ] `HATA-06` Bütçe, hedef ve geçmiş ekranları istek başarısız olunca boş liste gösteriyor (`budgets_screen.dart:59`, `goals_screen.dart:80`, `history_screen.dart:217`).
 - [ ] `HATA-07` Token süresi (7 gün) dolunca uygulama giriş ekranına dönmüyor; ekranlar hata gösteriyor.
-- [ ] `HATA-08` `PUT /transactions/{id}` ile bir alana `null` gönderilirse 500 dönüyor (`transactions.py:160-163`).
+- [x] `HATA-08` `PUT /transactions/{id}` ile bir alana `null` gönderilirse 500 dönüyor (`transactions.py:160-163`). Düzeltildi: `null` gönderilen alanlar artık değiştirilmiyor.
 - [ ] `HATA-09` Analitik sekmesi işlem eklendikten sonra yenilenmiyor (`home_shell.dart:48`).
 - [x] `HATA-10` Veritabanı yolu göreli (`backend/app/database.py:11`); backend başka klasörden başlatılırsa boş bir veritabanı oluşur.
+- [x] `HATA-11` İşlemler listesinde gün başlığındaki net tutar eksi işaretini iki kez yazıyordu ("−−₺202,62"). Düzeltildi (`history_screen.dart`).
 
 ### Güvenlik
 
@@ -97,7 +98,7 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 - [ ] `OZ-05` Şifre sıfırlama (şu an "yakında"), şifre değiştirme, hesap silme.
 - [ ] `OZ-06` Bütçe aşımı ve anomali için gerçek bildirim. Profildeki bildirim anahtarı şu an sadece görsel.
 - [ ] `OZ-07` PDF ve CSV dışa aktarma.
-- [ ] `OZ-08` Tekrarlayan işlem arayüzü: gider için de seçilebilmesi, seriyi durdurma, ne yaptığını anlatan bir etiket ("Gelir kaydedilsin mi" yerine).
+- [x] `OZ-08` Tekrarlayan işlem arayüzü: gider için de seçilebilmesi, seriyi durdurma, ne yaptığını anlatan bir etiket ("Gelir kaydedilsin mi" yerine). Yapıldı: kutu giderde de görünüyor, etiketi "Her ay tekrarla"; işaret kaldırılınca seri duruyor, tutar/not düzenlemesi sonraki aylara geçiyor.
 - [ ] `OZ-09` Arayüzde ay filtresi ve sayfalama.
 - [ ] `OZ-10` Profildeki sabit öğeler: "Premium üye" etiketi, sürüm numarası, işlevsiz ayarlar ikonu.
 
