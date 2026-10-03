@@ -4,7 +4,7 @@ Değerler ortam değişkenlerinden veya backend/.env dosyasından okunur (ortam 
 önceliklidir). Örnek dosya: backend/.env.example
 """
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{(BACKEND_DIR / 'expenza.db').as_posix()}"
     # Tanımlı değilse sohbet ve Gemini sınıflandırıcı devre dışı kalır.
     gemini_api_key: Optional[str] = None
+    gemini_chat_model: str = "gemini-2.5-flash"
+    gemini_categorizer_model: str = "gemini-2.5-flash"
+    # Kategori önerisi varsayılan olarak projede eğitilen yerel modelden gelir.
+    # "gemini" yapılırsa önce Gemini denenir (kıyas için); not metni Google'a gider.
+    categorizer: Literal["local", "gemini"] = "local"
 
 
 settings = Settings()

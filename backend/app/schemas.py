@@ -19,6 +19,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     display_name: str
+    ai_consent_at: Optional[datetime] = None  # boşsa sohbet asistanına onay yok
 
 
 class Token(BaseModel):

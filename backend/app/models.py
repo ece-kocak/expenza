@@ -50,6 +50,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
     display_name: Mapped[str] = mapped_column(String(120), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    # Sohbet asistanı için verilerinin Google Gemini'ye gönderilmesine onay verdiği an
+    # (UTC). Boşsa onay yok ya da geri çekilmiş.
+    ai_consent_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     transactions: Mapped[list["Transaction"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

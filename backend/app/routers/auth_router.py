@@ -1,4 +1,6 @@
 """Kayıt ve giriş uçları."""
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -41,4 +43,26 @@ def login(
 
 @router.get("/me", response_model=schemas.UserOut)
 def me(current: models.User = Depends(auth.get_current_user)):
+    return current
+
+
+@router.post("/me/ai-consent", response_model=schemas.UserOut)
+def give_ai_consent(
+    current: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)
+):
+    """Sohbet asistanı için verilerin Google Gemini'ye gönderilmesine onay verir."""
+    current.ai_consent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    db.commit()
+    db.refresh(current)
+    return current
+
+
+@router.delete("/me/ai-consent", response_model=schemas.UserOut)
+def withdraw_ai_consent(
+    current: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)
+):
+    """Onayı geri çeker; sohbet asistanı tekrar onay verilene kadar kullanılamaz."""
+    current.ai_consent_at = None
+    db.commit()
+    db.refresh(current)
     return current

@@ -30,16 +30,16 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 - [x] `HATA-02` Aynı fonksiyon `GET /transactions` içinde çalışıyor, yani okuma isteği veritabanına yazıyor. Uygulama açılışta bu ucu aynı anda üç kez çağırıyor; benzersizlik kısıtı olmadığı için eşzamanlı isteklerde aynı kopya iki kez oluşabilir. Yapılacak: seriyi ayrı bir kayıt olarak modellemek, üretimi GET'ten çıkarmak, benzersizlik kısıtı eklemek. Düzeltildi: üretim GET'ten çıktı, açılışta ve saatte bir arka planda çalışıyor; `(series_id, occurred_on)` benzersiz. Eski kayıtlar migration'da serilere bağlandı, aynı güne düşen kopyalar silinmeden seriden ayrıldı.
 - [x] `HATA-03` Ana sayfadaki bakiye sadece son 200 işlemden hesaplanıyor (`mobile/lib/screens/dashboard_screen.dart:79`, `115-120`; `api_client.dart:80`). Yapılacak: bakiye ve özetler için backend'de bir özet ucu. Düzeltildi: `GET /transactions/summary` eklendi. Ayrıca ana sayfadaki grafik başlığında ay adı yazdığı halde son 200 işlemin tamamını gösteriyordu; artık sadece bu ayı gösteriyor. Analitik ekranındaki "En Çok Harcanan Kategoriler" hâlâ son 200 işlemden hesaplanıyor (P2).
 - [x] `HATA-04` Android release derlemesinde `INTERNET` izni yok (`mobile/android/app/src/main/AndroidManifest.xml`); izin sadece debug ve profile manifestlerinde. Release APK backend'e bağlanamaz. İzin eklendi. Bu makinede Android SDK olmadığı için APK ile denenmedi; yayındaki backend HTTPS değilse Android'in şifresiz HTTP kısıtı ayrıca kontrol edilmeli (belirsiz).
-- [ ] `HATA-05` Kategori tahmini `gemini-1.5-flash` adını sabit kullanıyor (`backend/app/ml/categorizer.py:146`). Modelin hâlâ hizmette olup olmadığı belirsiz; değilse her öneri önce başarısız bir çağrı yapıp sonra yerel modele düşer. Yapılacak: model adlarını ayara taşımak (bkz. `TEZ-02`).
+- [x] `HATA-05` Kategori tahmini `gemini-1.5-flash` adını sabit kullanıyor (`backend/app/ml/categorizer.py:146`). Modelin hâlâ hizmette olup olmadığı belirsiz; değilse her öneri önce başarısız bir çağrı yapıp sonra yerel modele düşer. Yapılacak: model adlarını ayara taşımak (bkz. `TEZ-02`). Düzeltildi: model adları ayarda (`GEMINI_CHAT_MODEL`, `GEMINI_CATEGORIZER_MODEL`, varsayılan `gemini-2.5-flash`).
 
 ### Güvenlik
 
 - [ ] `SEC-03` Giriş, kayıt, sohbet ve kategori uçlarında istek sınırı yok. Yapılacak: IP ve hesap bazlı limit, art arda başarısız girişte gecikme.
 - [ ] `SEC-04` İstemci bütün istekleri şifresiz HTTP ile atıyor (`mobile/lib/api_client.dart:24-36`). Yapılacak: yayında HTTPS, API adresinin derleme sırasında verilmesi (`--dart-define`).
-- [ ] `SEC-05` Sohbet; kullanıcı adını, son 30 işlemi (notlarla), bütçeleri ve hedefleri Gemini'ye gönderiyor (`backend/app/routers/chat.py:32-114`). Kategori tahmini de notu gönderiyor. Kullanıcıya bildirim ya da onay yok. Yapılacak: bilgilendirme ve açık rıza, gönderilen veriyi en aza indirmek, ayarlardan kapatılabilir yapmak.
+- [x] `SEC-05` Sohbet; kullanıcı adını, son 30 işlemi (notlarla), bütçeleri ve hedefleri Gemini'ye gönderiyor (`backend/app/routers/chat.py:32-114`). Kategori tahmini de notu gönderiyor. Kullanıcıya bildirim ya da onay yok. Yapılacak: bilgilendirme ve açık rıza, gönderilen veriyi en aza indirmek, ayarlardan kapatılabilir yapmak. Düzeltildi: sohbet, kullanıcı uygulamada açık onay vermeden çalışmıyor (`POST/DELETE /auth/me/ai-consent`, migration 0004); onay Profil > Ayarlar'dan geri çekilebiliyor. Kullanıcının adı artık gönderilmiyor; kategori önerisi varsayılan olarak Google'a veri göndermiyor.
 - [ ] `SEC-06` CORS `allow_origins=["*"]` ile `allow_credentials=True` birlikte (`backend/app/main.py:26-32`). Starlette bu durumda istekteki origin'i yansıtıyor. Yapılacak: izinli adres listesi.
-- [ ] `SEC-07` Sohbet hatalarında Gemini'nin cevabı ve istisna metni istemciye dönüyor (`backend/app/routers/chat.py:119-133`). Yapılacak: istemciye genel mesaj, ayrıntı sunucu loguna.
-- [ ] `SEC-08` Gemini API anahtarı URL'de gidiyor (`chat.py:102`, `categorizer.py:146`). Yapılacak: istek başlığında göndermek.
+- [x] `SEC-07` Sohbet hatalarında Gemini'nin cevabı ve istisna metni istemciye dönüyor (`backend/app/routers/chat.py:119-133`). Yapılacak: istemciye genel mesaj, ayrıntı sunucu loguna. Düzeltildi: istemciye genel mesaj dönüyor, ayrıntı sunucu loguna yazılıyor (`app/llm.py`).
+- [x] `SEC-08` Gemini API anahtarı URL'de gidiyor (`chat.py:102`, `categorizer.py:146`). Yapılacak: istek başlığında göndermek. Düzeltildi: anahtar `x-goog-api-key` başlığında gidiyor.
 - [ ] `SEC-10` Parola için tek kural "en az 6 karakter" (`backend/app/schemas.py:13`).
 - [ ] `SEC-14` python-jose 3.3.0 kullanılıyor; CVE-2024-33663 ve CVE-2024-33664 bu sürümü etkiliyor (bugünkü HS256 kullanımında doğrudan sömürülebilir görünmüyor). Yapılacak: PyJWT'ye geçmek ve `pip-audit` çalıştırmak.
 - [ ] `SEC-16` `/docs`, `/redoc` ve `/openapi.json` herkese açık. Yapılacak: yayında kapatmak ya da korumak.
@@ -72,7 +72,7 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 - [ ] `SEC-13` Demo hesabın bilgileri giriş ekranına gömülü (`login_screen.dart:16-17`). Yapılacak: önceden doldurmayı sadece debug derlemesine bağlamak, `seed_demo.py`'nin yayında çalışmasını engellemek.
 - [ ] `SEC-15` Model pickle formatında yükleniyor (`categorizer.py:107`). Yapılacak: model dosyasının hash'ini doğrulamak.
 - [ ] `SEC-17` Android release derlemesi debug anahtarıyla imzalanıyor (`mobile/android/app/build.gradle.kts:32`).
-- [ ] `SEC-18` Kullanıcı metni Gemini prompt'una doğrudan ekleniyor (`chat.py:79-110`, `categorizer.py:133-143`). Yapılacak: kullanıcı metnini ayrı ve sınırlı bir bölümde vermek.
+- [x] `SEC-18` Kullanıcı metni Gemini prompt'una doğrudan ekleniyor (`chat.py:79-110`, `categorizer.py:133-143`). Yapılacak: kullanıcı metnini ayrı ve sınırlı bir bölümde vermek. Düzeltildi: kullanıcı mesajı sistem talimatından ayrı alanda gidiyor (`systemInstruction`), mesaj 1000 karakterle sınırlı ve talimatlar kullanıcı metnindeki komutları uygulamamasını söylüyor.
 - [ ] `SEC-20` Backend güvenlik başlığı eklemiyor (en azından `X-Content-Type-Options` ve HTTPS ile HSTS).
 - [ ] `SEC-21` Güvenlik olayları (başarısız giriş, kayıt, silme) loglanmıyor; sadece birkaç `print` var.
 
@@ -82,9 +82,9 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 - [ ] `KOD-02` Kategori listesi en az altı yerde ayrı tutuluyor (`CategoryEnum`, `KEYWORDS`, `generate_data.DATA`, `kCategories`, profil metni, renk/ikon eşlemeleri). `Toplam` bir kategori değil, `CategoryEnum`'dan ayrılmalı; şu an API onu işlem kategorisi olarak da kabul ediyor.
 - [ ] `KOD-03` Ekran dosyaları 500-840 satır ve arayüz, API çağrısı ve iş kuralı aynı yerde. Backend'de iş kuralları router'larda; servis katmanı yok.
 - [x] `KOD-04` Kullanılmayan bağımlılıklar: `pydantic-settings`, çalışma zamanında `pandas` (sadece eğitimde gerekli), `provider`. Kullanılmayan kod: `ExpenzaAppBar` (`home_shell.dart:102`). Not: `cupertino_icons` önce kaldırıldı, sonra geri eklendi; uygulama kodu kullanmasa da Flutter'ın Cupertino bileşenleri bu fonta ihtiyaç duyuyor.
-- [ ] `KOD-05` Gemini çağrısı iki ayrı yerde ve iki farklı model adıyla yazılmış (`chat.py`, `categorizer.py`). Tek modülde toplanmalı.
-- [ ] `KOD-06` Performans: tekrarlayan işlem üretimindeki N+1 sorgu ve satır başına commit; açılışta beş sekmenin birden yüklenmesi (3 kez `GET /transactions`); analitik uçlarının bütün işlemleri belleğe çekmesi; `chat.py`'de `async` fonksiyon içinde senkron veritabanı sorgusu; sayfalama olmaması.
-- [ ] `KOD-07` Güncel olmayan belgeler: `expenza_yol_haritasi.md` Go, PostgreSQL ve Riverpod anlatıyor; `categorizer.py` başındaki açıklama "STUB ile çalışır" diyor.
+- [x] `KOD-05` Gemini çağrısı iki ayrı yerde ve iki farklı model adıyla yazılmış (`chat.py`, `categorizer.py`). Tek modülde toplanmalı. Düzeltildi: tüm Gemini çağrıları `app/llm.py` üzerinden.
+- [ ] `KOD-06` Performans: tekrarlayan işlem üretimindeki N+1 sorgu ve satır başına commit; açılışta beş sekmenin birden yüklenmesi (3 kez `GET /transactions`); analitik uçlarının bütün işlemleri belleğe çekmesi; `chat.py`'de `async` fonksiyon içinde senkron veritabanı sorgusu; sayfalama olmaması. Tekrarlayan işlemdeki N+1 ve sohbetteki async/senkron sorunu giderildi; diğerleri açık.
+- [x] `KOD-07` Güncel olmayan belgeler: `expenza_yol_haritasi.md` Go, PostgreSQL ve Riverpod anlatıyor; `categorizer.py` başındaki açıklama "STUB ile çalışır" diyor. Eski yol haritası kaldırıldı, `categorizer.py` açıklaması güncellendi.
 - [ ] `KOD-08` `theme.dart:37` `\$e` yazdığı için döviz kuru hatasını basmıyor.
 - [ ] `KOD-09` Backend metinleri (içgörü, anomali nedeni, sohbet) para birimini ₺ olarak sabit yazıyor. Geçmiş tutarlar bugünkü kurla çevriliyor.
 - [x] `KOD-10` `categorizer.py`'de `Optional` import edilmemiş; sadece `from __future__ import annotations` sayesinde hata vermiyor.
@@ -94,7 +94,7 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 - [ ] `OZ-01` Kalıcı oturum (güvenli depolama). Şu an token sadece bellekte.
 - [ ] `OZ-02` İşlem tarihi seçici. Backend `occurred_on` alanını destekliyor, arayüzde yok.
 - [ ] `OZ-03` Hedef son tarihi ve hedef düzenleme. Backend `deadline` alanını destekliyor, arayüzde yok.
-- [ ] `OZ-04` Sohbette Markdown gösterimi (şu an `**` gibi işaretler görünüyor) ve konuşma geçmişi.
+- [ ] `OZ-04` Sohbette Markdown gösterimi (şu an `**` gibi işaretler görünüyor) ve konuşma geçmişi. Kısmen: Gemini'den artık düz metin isteniyor, `**` işaretleri görünmüyor; konuşma geçmişi hâlâ yok.
 - [ ] `OZ-05` Şifre sıfırlama (şu an "yakında"), şifre değiştirme, hesap silme.
 - [ ] `OZ-06` Bütçe aşımı ve anomali için gerçek bildirim. Profildeki bildirim anahtarı şu an sadece görsel.
 - [ ] `OZ-07` PDF ve CSV dışa aktarma.
@@ -109,7 +109,7 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 BLM497 şablonları (Proje Önerisi, Gereksinimler Şartnamesi ve Ön Analiz, Ön Tasarım) ile tezin ana iddiası ("aktif finans koçu plansız harcamayı azaltır") esas alınarak çıkarıldı.
 
 - [ ] `TEZ-01` (P0) Ana iddiayı ölçen bir deney tasarımı yok. Karar verilmeli: gerçek kullanıcılarla pilot (örneğin 2-4 hafta, ön ve son anket, SUS kullanılabilirlik ölçeği, kullanım metrikleri) ya da simülasyon. Bu karar kayıt tutulacak verileri ve onay metnini belirlediği için erken verilmeli.
-- [ ] `TEZ-02` (P1) Kendi eğitilen model ürünün ana yolu değil. `GEMINI_API_KEY` tanımlıysa kategori önerisini önce Gemini veriyor, kendi model yedek konumuna düşüyor. Yapılacak: kendi model ana yol olmalı; Gemini aynı doğrulama setinde kıyas modeli olarak değerlendirilebilir.
+- [x] `TEZ-02` (P1) Kendi eğitilen model ürünün ana yolu değil. `GEMINI_API_KEY` tanımlıysa kategori önerisini önce Gemini veriyor, kendi model yedek konumuna düşüyor. Yapılacak: kendi model ana yol olmalı; Gemini aynı doğrulama setinde kıyas modeli olarak değerlendirilebilir. Yapıldı: kategori önerisi varsayılan olarak yerel modelden geliyor (`CATEGORIZER=local`); Gemini yalnızca `CATEGORIZER=gemini` ile kıyas için açılıyor.
 - [ ] `TEZ-03` (P1) Doğrulama seti 46 örnek. `MODEL_RESULTS.md` de 150+ gerçek örnek öneriyor. Sınıf bazında precision ve recall, karışıklık matrisi, gecikme ve model boyutu kıyası eklenmeli.
 - [ ] `TEZ-04` (P1) Kullanıcının öneriyi kabul ya da reddetmesi kaydedilmiyor. Kaydedilirse modelin gerçek kullanımdaki doğruluğu ölçülebilir ve yeniden eğitimde kullanılabilir.
 - [ ] `TEZ-05` (P2) Tahmin ve anomali yöntemleri ölçülmemiş. Geçmiş veride geriye dönük test (MAE, MAPE) ve eklenen anomalilerle precision/recall yapılabilir.

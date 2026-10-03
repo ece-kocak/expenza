@@ -66,9 +66,12 @@ Değerler ortam değişkenlerinden ya da `backend/.env` dosyasından okunur; iki
 |---|---|---|
 | `SECRET_KEY` | Evet | JWT imza anahtarı, en az 32 karakter |
 | `DATABASE_URL` | Hayır | Boşsa `backend/expenza.db` (SQLite) kullanılır |
-| `GEMINI_API_KEY` | Hayır | Tanımlıysa sohbet asistanı ve kategori önerisi Google Gemini'yi kullanır |
+| `GEMINI_API_KEY` | Hayır | Tanımlıysa sohbet asistanı açılır |
+| `GEMINI_CHAT_MODEL` | Hayır | Sohbet modeli, varsayılan `gemini-2.5-flash` |
+| `CATEGORIZER` | Hayır | `local` (varsayılan, projede eğitilen model) ya da `gemini` (kıyas için) |
+| `GEMINI_CATEGORIZER_MODEL` | Hayır | `CATEGORIZER=gemini` iken kullanılan model |
 
-`GEMINI_API_KEY` tanımlandığında kullanıcının adı, son işlemleri, bütçeleri ve hedefleri Google'a gönderilir. Tanımlı değilse sohbet ekranı bir uyarı metni döner, kategori önerisini yerel model verir.
+Sohbet asistanı kullanıcı uygulamada açık onay verene kadar çalışmaz. Onaydan sonra her soruda kullanıcının son 30 işlemi, bütçeleri ve hedefleri Google'a gönderilir; adı ve e-postası gönderilmez. Onay Profil > Ayarlar'dan geri çekilebilir. Kategori önerisi varsayılan olarak yerel modelden gelir ve Google'a veri göndermez.
 
 ### Demo verisi
 
