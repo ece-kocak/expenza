@@ -90,6 +90,26 @@ flutter run -d chrome
 - Android emülatöründe `10.0.2.2:8010` kullanılır (emülatörden bilgisayara köprü adresi).
 - Bağlı bir telefon ya da emülatör için `-d chrome` olmadan `flutter run` yeterlidir.
 
+## Testler
+
+Backend testleri geçici bir SQLite veritabanı kullanır ve Gemini'ye istek atmaz:
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest --cov=app
+```
+
+Flutter tarafında:
+
+```bash
+cd mobile
+flutter analyze
+flutter test
+```
+
+Aynı kontroller her push'ta GitHub Actions ile çalışır (`.github/workflows/ci.yml`).
+
 ## Veritabanı değişiklikleri (migration)
 
 Şema Alembic ile yönetilir; migration dosyaları `backend/migrations/versions/` altında. Bir modele alan eklediğinizde `backend` klasöründe:
