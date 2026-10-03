@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from .. import llm, models
+from .. import llm, models, ratelimit
 from ..auth import get_current_user
 from ..config import settings
 from ..database import get_db
@@ -65,7 +65,9 @@ def _financial_context(db: Session, user_id: int) -> str:
     )
 
 
-@router.post("", response_model=ChatResponse)
+@router.post(
+    "", response_model=ChatResponse, dependencies=[Depends(ratelimit.limit_chat)]
+)
 def chat_with_gemini(
     payload: ChatRequest,
     db: Session = Depends(get_db),

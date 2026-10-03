@@ -70,6 +70,10 @@ Değerler ortam değişkenlerinden ya da `backend/.env` dosyasından okunur; iki
 | `GEMINI_CHAT_MODEL` | Hayır | Sohbet modeli, varsayılan `gemini-2.5-flash` |
 | `CATEGORIZER` | Hayır | `local` (varsayılan, projede eğitilen model) ya da `gemini` (kıyas için) |
 | `GEMINI_CATEGORIZER_MODEL` | Hayır | `CATEGORIZER=gemini` iken kullanılan model |
+| `CORS_ORIGINS` | Hayır | Web istemcisinin yayınlandığı adresler, virgülle ayrılmış. localhost'un bütün portlarına zaten izin verilir. |
+| `DOCS_ENABLED` | Hayır | `false` yapılırsa `/docs`, `/redoc` ve `/openapi.json` kapanır (yayında önerilir) |
+
+Giriş, kayıt, sohbet ve kategori uçlarında istek sınırı vardır (örneğin aynı e-postayla 15 dakikada 5 hatalı parola denemesinden sonra 429 döner). Sınırlayıcı bellek içinde çalışır, yani tek sunucu süreci için tasarlanmıştır. Yeni hesaplarda parola en az 8 karakter olmalı ve en az bir harf ile bir rakam içermelidir.
 
 Sohbet asistanı kullanıcı uygulamada açık onay verene kadar çalışmaz. Onaydan sonra her soruda kullanıcının son 30 işlemi, bütçeleri ve hedefleri Google'a gönderilir; adı ve e-postası gönderilmez. Onay Profil > Ayarlar'dan geri çekilebilir. Kategori önerisi varsayılan olarak yerel modelden gelir ve Google'a veri göndermez.
 
@@ -92,6 +96,12 @@ flutter run -d chrome
 - Web ve iOS simülatöründe uygulama `localhost:8010` adresine bağlanır.
 - Android emülatöründe `10.0.2.2:8010` kullanılır (emülatörden bilgisayara köprü adresi).
 - Bağlı bir telefon ya da emülatör için `-d chrome` olmadan `flutter run` yeterlidir.
+
+Yayın derlemesinde backend adresi derleme sırasında verilir; adres HTTPS olmalıdır:
+
+```bash
+flutter build web --dart-define=API_BASE_URL=https://api.ornek.com
+```
 
 ## Testler
 

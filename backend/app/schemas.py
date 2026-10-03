@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from .models import CategoryEnum, TxType
 
@@ -10,8 +10,18 @@ from .models import CategoryEnum, TxType
 # ---- Auth ----
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
-    display_name: str = ""
+    password: str = Field(max_length=128)
+    display_name: str = Field(default="", max_length=120)
+
+    @field_validator("password")
+    @classmethod
+    def _password_policy(cls, value: str) -> str:
+        # Mesajlar mobil uygulamada olduğu gibi gösterilir.
+        if len(value) < 8:
+            raise ValueError("Parola en az 8 karakter olmalı")
+        if not any(c.isalpha() for c in value) or not any(c.isdigit() for c in value):
+            raise ValueError("Parola en az bir harf ve bir rakam içermeli")
+        return value
 
 
 class UserOut(BaseModel):

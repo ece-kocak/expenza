@@ -17,7 +17,7 @@ os.environ["GEMINI_API_KEY"] = ""
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app import models  # noqa: E402
+from app import models, ratelimit  # noqa: E402
 from app.database import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
 
@@ -31,6 +31,7 @@ def client():
 
 @pytest.fixture(autouse=True)
 def _clean_db():
+    ratelimit.reset_all()
     yield
     with SessionLocal() as db:
         for model in (

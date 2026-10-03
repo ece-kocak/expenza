@@ -2,12 +2,14 @@
 
 SECRET_KEY zorunludur ve ortam değişkeninden ya da backend/.env dosyasından gelir.
 """
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jwt import InvalidTokenError
 from sqlalchemy.orm import Session
 
 from . import models
@@ -44,9 +46,18 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
+# Kullanıcı bulunamadığında da bir bcrypt kontrolü yapılır; böylece cevap süresi
+# e-postanın kayıtlı olup olmadığını ele vermez.
+DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(16))
+
+
 def create_access_token(subject: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {"sub": subject, "exp": expire}
+    now = datetime.now(timezone.utc)
+    payload = {
+        "sub": subject,
+        "iat": now,
+        "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -59,12 +70,12 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if email is None:
-            raise cred_error
-    except JWTError:
+        payload = jwt.decode(
+            token, SECRET_KEY, algorithms=[ALGORITHM], options={"require": ["exp", "sub"]}
+        )
+    except InvalidTokenError:
         raise cred_error
+    email = payload["sub"]
 
     user = db.query(models.User).filter(models.User.email == email).first()
     if user is None:

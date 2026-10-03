@@ -31,5 +31,12 @@ class Settings(BaseSettings):
     # "gemini" yapılırsa önce Gemini denenir (kıyas için); not metni Google'a gider.
     categorizer: Literal["local", "gemini"] = "local"
 
+    # Web istemcisinin yayınlandığı adresler, virgülle ayrılmış (ör. https://expenza.app).
+    cors_origins: str = ""
+    # Geliştirmede Flutter web her seferinde farklı bir localhost portu kullanır.
+    cors_origin_regex: str = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+    # Yayında kapatılabilir: /docs, /redoc ve /openapi.json.
+    docs_enabled: bool = True
+
 
 settings = Settings()

@@ -4,7 +4,7 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+import jwt
 
 from app.auth import ALGORITHM, SECRET_KEY
 from conftest import BACKEND_DIR
@@ -61,6 +61,22 @@ def test_token_signed_with_another_secret_is_rejected(client, user):
         algorithm="HS256",
     )
     r = client.get("/auth/me", headers={"Authorization": f"Bearer {forged}"})
+    assert r.status_code == 401
+
+
+def test_token_without_expiry_is_rejected(client, user):
+    no_exp = jwt.encode({"sub": user["email"]}, SECRET_KEY, algorithm=ALGORITHM)
+    r = client.get("/auth/me", headers={"Authorization": f"Bearer {no_exp}"})
+    assert r.status_code == 401
+
+
+def test_unsigned_token_is_rejected(client, user):
+    unsigned = jwt.encode(
+        {"sub": user["email"], "exp": datetime.now(timezone.utc) + timedelta(hours=1)},
+        key=None,
+        algorithm="none",
+    )
+    r = client.get("/auth/me", headers={"Authorization": f"Bearer {unsigned}"})
     assert r.status_code == 401
 
 

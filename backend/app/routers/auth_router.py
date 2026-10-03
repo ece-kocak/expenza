@@ -1,18 +1,21 @@
 """Kayıt ve giriş uçları."""
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from .. import auth, models, schemas
+from .. import auth, models, ratelimit, schemas
 from ..database import get_db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=schemas.UserOut, status_code=201)
-def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
+def register(
+    payload: schemas.UserCreate, request: Request, db: Session = Depends(get_db)
+):
+    ratelimit.enforce(ratelimit.register_by_ip, ratelimit.client_ip(request))
     existing = db.query(models.User).filter(models.User.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Bu e-posta zaten kayıtlı")
@@ -29,11 +32,21 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=schemas.Token)
 def login(
-    form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+    request: Request,
+    form: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
 ):
+    ratelimit.enforce(ratelimit.login_by_ip, ratelimit.client_ip(request))
     # OAuth2 form 'username' alanını e-posta olarak kullanıyoruz.
+    email_key = form.username.strip().lower()
+    if ratelimit.login_failures_by_email.is_limited(email_key):
+        raise ratelimit.too_many()
+
     user = db.query(models.User).filter(models.User.email == form.username).first()
-    if not user or not auth.verify_password(form.password, user.hashed_password):
+    # Kullanıcı yoksa da bcrypt çalışır; cevap süresi e-postanın varlığını ele vermez.
+    hashed = user.hashed_password if user else auth.DUMMY_PASSWORD_HASH
+    if not auth.verify_password(form.password, hashed) or not user:
+        ratelimit.login_failures_by_email.add(email_key)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="E-posta veya parola hatalı",

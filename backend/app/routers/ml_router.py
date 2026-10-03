@@ -5,18 +5,18 @@ Bu uç, mobil uygulamada 'Harcama Ekle' ekranında not yazılırken canlı kateg
 """
 from fastapi import APIRouter, Depends
 
-from .. import schemas
-from ..auth import get_current_user
+from .. import ratelimit, schemas
 from ..ml import categorizer
 
 router = APIRouter(prefix="/ml", tags=["ml"])
 
 
-# Giriş zorunlu: Gemini anahtarı tanımlıysa her çağrı ücretli bir dış istek yapar.
+# Giriş zorunlu ve kullanıcı başına sınırlı: CATEGORIZER=gemini iken her çağrı ücretli
+# bir dış istek yapar.
 @router.post(
     "/categorize",
     response_model=schemas.CategorizeResponse,
-    dependencies=[Depends(get_current_user)],
+    dependencies=[Depends(ratelimit.limit_categorize)],
 )
 def categorize(payload: schemas.CategorizeRequest):
     cat, conf, model = categorizer.categorize(payload.text)

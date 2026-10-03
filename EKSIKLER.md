@@ -34,15 +34,15 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 
 ### Güvenlik
 
-- [ ] `SEC-03` Giriş, kayıt, sohbet ve kategori uçlarında istek sınırı yok. Yapılacak: IP ve hesap bazlı limit, art arda başarısız girişte gecikme.
-- [ ] `SEC-04` İstemci bütün istekleri şifresiz HTTP ile atıyor (`mobile/lib/api_client.dart:24-36`). Yapılacak: yayında HTTPS, API adresinin derleme sırasında verilmesi (`--dart-define`).
+- [x] `SEC-03` Giriş, kayıt, sohbet ve kategori uçlarında istek sınırı yok. Yapılacak: IP ve hesap bazlı limit, art arda başarısız girişte gecikme. Yapıldı: bellek içi sınırlayıcı (`app/ratelimit.py`). Giriş IP başına dakikada 20; aynı e-postaya 15 dakikada 5 hatalı paroladan sonra 429; kayıt IP başına saatte 10; sohbet kullanıcı başına dakikada 20; kategori dakikada 60. Birden fazla sunucu sürecinde paylaşılan bir depo (Redis) gerekir.
+- [x] `SEC-04` İstemci bütün istekleri şifresiz HTTP ile atıyor (`mobile/lib/api_client.dart:24-36`). Yapılacak: yayında HTTPS, API adresinin derleme sırasında verilmesi (`--dart-define`). Kod tarafı yapıldı: mobilde `--dart-define=API_BASE_URL=https://...` ile adres derleme sırasında verilebiliyor. HTTPS'li sunucu `TEZ-11` ile birlikte kurulacak.
 - [x] `SEC-05` Sohbet; kullanıcı adını, son 30 işlemi (notlarla), bütçeleri ve hedefleri Gemini'ye gönderiyor (`backend/app/routers/chat.py:32-114`). Kategori tahmini de notu gönderiyor. Kullanıcıya bildirim ya da onay yok. Yapılacak: bilgilendirme ve açık rıza, gönderilen veriyi en aza indirmek, ayarlardan kapatılabilir yapmak. Düzeltildi: sohbet, kullanıcı uygulamada açık onay vermeden çalışmıyor (`POST/DELETE /auth/me/ai-consent`, migration 0004); onay Profil > Ayarlar'dan geri çekilebiliyor. Kullanıcının adı artık gönderilmiyor; kategori önerisi varsayılan olarak Google'a veri göndermiyor.
-- [ ] `SEC-06` CORS `allow_origins=["*"]` ile `allow_credentials=True` birlikte (`backend/app/main.py:26-32`). Starlette bu durumda istekteki origin'i yansıtıyor. Yapılacak: izinli adres listesi.
+- [x] `SEC-06` CORS `allow_origins=["*"]` ile `allow_credentials=True` birlikte (`backend/app/main.py:26-32`). Starlette bu durumda istekteki origin'i yansıtıyor. Yapılacak: izinli adres listesi. Yapıldı: `CORS_ORIGINS` listesi ve geliştirme için localhost portları; credentials kapalı.
 - [x] `SEC-07` Sohbet hatalarında Gemini'nin cevabı ve istisna metni istemciye dönüyor (`backend/app/routers/chat.py:119-133`). Yapılacak: istemciye genel mesaj, ayrıntı sunucu loguna. Düzeltildi: istemciye genel mesaj dönüyor, ayrıntı sunucu loguna yazılıyor (`app/llm.py`).
 - [x] `SEC-08` Gemini API anahtarı URL'de gidiyor (`chat.py:102`, `categorizer.py:146`). Yapılacak: istek başlığında göndermek. Düzeltildi: anahtar `x-goog-api-key` başlığında gidiyor.
-- [ ] `SEC-10` Parola için tek kural "en az 6 karakter" (`backend/app/schemas.py:13`).
-- [ ] `SEC-14` python-jose 3.3.0 kullanılıyor; CVE-2024-33663 ve CVE-2024-33664 bu sürümü etkiliyor (bugünkü HS256 kullanımında doğrudan sömürülebilir görünmüyor). Yapılacak: PyJWT'ye geçmek ve `pip-audit` çalıştırmak.
-- [ ] `SEC-16` `/docs`, `/redoc` ve `/openapi.json` herkese açık. Yapılacak: yayında kapatmak ya da korumak.
+- [x] `SEC-10` Parola için tek kural "en az 6 karakter" (`backend/app/schemas.py:13`). Yapıldı: en az 8 karakter, en az bir harf ve bir rakam; mesajlar Türkçe ve kayıt ekranında kural yazıyor. Mevcut hesaplar etkilenmez.
+- [x] `SEC-14` python-jose 3.3.0 kullanılıyor; CVE-2024-33663 ve CVE-2024-33664 bu sürümü etkiliyor (bugünkü HS256 kullanımında doğrudan sömürülebilir görünmüyor). Yapılacak: PyJWT'ye geçmek ve `pip-audit` çalıştırmak. Yapıldı: PyJWT 2.15.1'e geçildi; token'da `exp` ve `sub` zorunlu, imzasız (`alg: none`) token reddediliyor.
+- [x] `SEC-16` `/docs`, `/redoc` ve `/openapi.json` herkese açık. Yapılacak: yayında kapatmak ya da korumak. Yapıldı: `DOCS_ENABLED=false` ile kapanıyor.
 
 ### Altyapı
 
@@ -67,13 +67,13 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 ### Güvenlik
 
 - [ ] `SEC-09` Token 7 gün geçerli, refresh yok, çıkış sadece istemcide (`auth.py:19`, `api_client.dart:66`).
-- [ ] `SEC-11` Kayıt hatası e-postanın kayıtlı olduğunu söylüyor; girişte kullanıcı yoksa bcrypt çalışmadığı için cevap süresi farklı (`auth_router.py:16`, `33-38`).
+- [x] `SEC-11` Kayıt hatası e-postanın kayıtlı olduğunu söylüyor; girişte kullanıcı yoksa bcrypt çalışmadığı için cevap süresi farklı (`auth_router.py:16`, `33-38`). Kısmen: giriş artık kullanıcı yokken de bcrypt çalıştırıyor (zamanlama farkı yok). Kayıt ekranındaki "e-posta zaten kayıtlı" mesajı kullanıcı deneyimi için bırakıldı; kayıt istek sınırı bu ifşayı yavaşlatıyor.
 - [ ] `SEC-12` Not, görünen ad, sohbet mesajı ve kategori metninde uzunluk sınırı yok; `limit` parametresi ve tutarlar için üst sınır yok.
 - [ ] `SEC-13` Demo hesabın bilgileri giriş ekranına gömülü (`login_screen.dart:16-17`). Yapılacak: önceden doldurmayı sadece debug derlemesine bağlamak, `seed_demo.py`'nin yayında çalışmasını engellemek.
 - [ ] `SEC-15` Model pickle formatında yükleniyor (`categorizer.py:107`). Yapılacak: model dosyasının hash'ini doğrulamak.
 - [ ] `SEC-17` Android release derlemesi debug anahtarıyla imzalanıyor (`mobile/android/app/build.gradle.kts:32`).
 - [x] `SEC-18` Kullanıcı metni Gemini prompt'una doğrudan ekleniyor (`chat.py:79-110`, `categorizer.py:133-143`). Yapılacak: kullanıcı metnini ayrı ve sınırlı bir bölümde vermek. Düzeltildi: kullanıcı mesajı sistem talimatından ayrı alanda gidiyor (`systemInstruction`), mesaj 1000 karakterle sınırlı ve talimatlar kullanıcı metnindeki komutları uygulamamasını söylüyor.
-- [ ] `SEC-20` Backend güvenlik başlığı eklemiyor (en azından `X-Content-Type-Options` ve HTTPS ile HSTS).
+- [x] `SEC-20` Backend güvenlik başlığı eklemiyor (en azından `X-Content-Type-Options` ve HTTPS ile HSTS). Yapıldı: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`; HTTPS isteklerinde HSTS.
 - [ ] `SEC-21` Güvenlik olayları (başarısız giriş, kayıt, silme) loglanmıyor; sadece birkaç `print` var.
 
 ### Kod kalitesi
