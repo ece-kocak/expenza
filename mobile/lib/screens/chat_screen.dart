@@ -35,6 +35,35 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   bool _isLoading = false;
 
+  // Veri paylaşımı onayı: null = yükleniyor.
+  bool? _consent;
+  bool _savingConsent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ApiClient.instance.hasAiConsent().then((v) {
+      if (mounted) setState(() => _consent = v);
+    }).catchError((_) {
+      if (mounted) setState(() => _consent = false);
+    });
+  }
+
+  Future<void> _giveConsent() async {
+    setState(() => _savingConsent = true);
+    try {
+      await ApiClient.instance.setAiConsent(true);
+      if (mounted) setState(() => _consent = true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    } finally {
+      if (mounted) setState(() => _savingConsent = false);
+    }
+  }
+
   @override
   void dispose() {
     _textController.dispose();
@@ -73,10 +102,14 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
+      // Backend kullanıcıya gösterilebilir, genel bir mesaj döndürür.
+      final detail = e.toString().replaceFirst('Exception: ', '');
       if (mounted) {
         setState(() {
           _messages.add(_Message(
-            text: "Üzgünüm, asistan servisine bağlanırken bir hata oluştu. Lütfen tekrar deneyin.",
+            text: detail.isNotEmpty
+                ? detail
+                : "Üzgünüm, asistan servisine bağlanırken bir hata oluştu. Lütfen tekrar deneyin.",
             isUser: false,
             time: DateTime.now(),
           ));
@@ -127,50 +160,99 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         shape: Border(bottom: BorderSide(color: AppColors.glassBorder)),
       ),
-      body: Column(
-        children: [
-          // Mesaj listesi
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              itemCount: _messages.length,
-              itemBuilder: (context, idx) {
-                final msg = _messages[idx];
-                return _chatBubble(msg);
-              },
-            ),
+      body: _consent == null
+          ? Center(child: CircularProgressIndicator(color: AppColors.outline))
+          : _consent == false
+              ? _consentPanel()
+              : _chatBody(isDark),
+    );
+  }
+
+  /// Aydınlatma metni ve açık rıza: onay verilmeden hiçbir veri gönderilmez.
+  Widget _consentPanel() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
+      children: [
+        Icon(Icons.privacy_tip_outlined, size: 40, color: AppColors.primary),
+        const SizedBox(height: 16),
+        Text('Veri paylaşımı onayı',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface)),
+        const SizedBox(height: 12),
+        Text(
+          'Expenza AI sorularını yanıtlarken Google Gemini hizmetini kullanır. '
+          'Bunun için her soruda son 30 işlemin (tutar, kategori, tarih ve not), '
+          'bütçe limitlerin ve tasarruf hedeflerin Google\'a gönderilir. '
+          'Adın ve e-posta adresin gönderilmez.\n\n'
+          'Onayını istediğin zaman Profil > Ayarlar bölümünden geri çekebilirsin.',
+          style: TextStyle(
+              fontSize: 13.5, height: 1.55, color: AppColors.onSurfaceVariant),
+        ),
+        const SizedBox(height: 28),
+        FilledButton(
+          onPressed: _savingConsent ? null : _giveConsent,
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.onPrimary,
+            minimumSize: const Size.fromHeight(50),
           ),
-          
-          if (_isLoading)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.5,
-                        color: AppColors.outline,
-                      ),
+          child: Text(_savingConsent ? 'Kaydediliyor…' : 'Onaylıyorum'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Vazgeç', style: TextStyle(color: AppColors.outline)),
+        ),
+      ],
+    );
+  }
+
+  Widget _chatBody(bool isDark) {
+    return Column(
+      children: [
+        // Mesaj listesi
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            itemCount: _messages.length,
+            itemBuilder: (context, idx) {
+              final msg = _messages[idx];
+              return _chatBubble(msg);
+            },
+          ),
+        ),
+
+        if (_isLoading)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: AppColors.outline,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Asistan yanıt yazıyor...",
-                      style: TextStyle(fontSize: 12, color: AppColors.outline),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Asistan yanıt yazıyor...",
+                    style: TextStyle(fontSize: 12, color: AppColors.outline),
+                  ),
+                ],
               ),
             ),
+          ),
 
-          // Alt mesaj çubuğu
-          _bottomBar(isDark),
-        ],
-      ),
+        // Alt mesaj çubuğu
+        _bottomBar(isDark),
+      ],
     );
   }
 

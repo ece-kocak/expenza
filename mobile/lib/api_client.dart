@@ -229,6 +229,22 @@ class ApiClient {
     return CategorySuggestion.fromJson(jsonDecode(r.body));
   }
 
+  /// Sohbet asistanı için veri paylaşımı onayı verilmiş mi?
+  Future<bool> hasAiConsent() async {
+    final r = await http.get(_u('/auth/me'), headers: _headers);
+    if (r.statusCode >= 400) throw _err(r);
+    return jsonDecode(r.body)['ai_consent_at'] != null;
+  }
+
+  /// Onayı verir (true) ya da geri çeker (false).
+  Future<void> setAiConsent(bool value) async {
+    final uri = _u('/auth/me/ai-consent');
+    final r = value
+        ? await http.post(uri, headers: _headers)
+        : await http.delete(uri, headers: _headers);
+    if (r.statusCode >= 400) throw _err(r);
+  }
+
   /// AI Chatbot: Gemini asistanı ile sohbet.
   Future<String> sendChatMessage(String message) async {
     final r = await http.post(_u('/chat'),

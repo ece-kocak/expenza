@@ -19,11 +19,27 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<_Data> _future;
   bool _notif = true;
+  bool? _aiConsent; // null = henüz yüklenmedi
 
   @override
   void initState() {
     super.initState();
     _future = _load();
+    ApiClient.instance.hasAiConsent().then((v) {
+      if (mounted) setState(() => _aiConsent = v);
+    }).catchError((_) {});
+  }
+
+  Future<void> _setAiConsent(bool value) async {
+    try {
+      await ApiClient.instance.setAiConsent(value);
+      if (mounted) setState(() => _aiConsent = value);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', ''))));
+      }
+    }
   }
 
   Future<_Data> _load() async {
@@ -420,6 +436,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: _notif ? 'Bütçe ve anomali uyarıları' : 'Kapalı',
             trailing: _miniSwitch(_notif, (v) => setState(() => _notif = v)),
           ),
+          if (_aiConsent != null) ...[
+            _divider(),
+            _settingRow(
+              _infoColor,
+              Icons.psychology_outlined,
+              'Yapay zekâ veri paylaşımı',
+              subtitle: _aiConsent!
+                  ? 'Sohbet için veriler Google Gemini\'ye gidiyor'
+                  : 'Kapalı',
+              trailing: _miniSwitch(_aiConsent!, _setAiConsent),
+            ),
+          ],
           _divider(),
           _settingRow(AppColors.outline, Icons.info_outline, 'Sürüm',
               value: 'v0.1.0'),
