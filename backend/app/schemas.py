@@ -37,12 +37,17 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+# Girdi sınırları: tutarlar için makul bir üst sınır, not için veritabanı sütunuyla aynı uzunluk.
+MAX_AMOUNT = 1_000_000_000
+MAX_NOTE = 500
+
+
 # ---- Transactions ----
 class TransactionBase(BaseModel):
-    amount: float = Field(gt=0)
+    amount: float = Field(gt=0, le=MAX_AMOUNT)
     type: TxType = TxType.expense
     category: Optional[CategoryEnum] = None  # None => model otomatik atar
-    note: str = ""
+    note: str = Field(default="", max_length=MAX_NOTE)
     occurred_on: date = Field(default_factory=date.today)
     is_recurring: bool = False
 
@@ -53,10 +58,10 @@ class TransactionCreate(TransactionBase):
 
 class TransactionUpdate(BaseModel):
     # Tüm alanlar opsiyonel — yalnızca gönderilenler güncellenir.
-    amount: Optional[float] = Field(default=None, gt=0)
+    amount: Optional[float] = Field(default=None, gt=0, le=MAX_AMOUNT)
     type: Optional[TxType] = None
     category: Optional[CategoryEnum] = None
-    note: Optional[str] = None
+    note: Optional[str] = Field(default=None, max_length=MAX_NOTE)
     occurred_on: Optional[date] = None
     is_recurring: Optional[bool] = None
 
@@ -93,7 +98,7 @@ class TransactionSummary(BaseModel):
 # ---- Budgets ----
 class BudgetCreate(BaseModel):
     category: CategoryEnum
-    monthly_limit: float = Field(gt=0)
+    monthly_limit: float = Field(gt=0, le=MAX_AMOUNT)
 
 
 class BudgetOut(BaseModel):
@@ -157,12 +162,12 @@ class InsightItem(BaseModel):
 # ---- Savings goals ----
 class GoalCreate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
-    target_amount: float = Field(gt=0)
+    target_amount: float = Field(gt=0, le=MAX_AMOUNT)
     deadline: Optional[date] = None
 
 
 class GoalContribute(BaseModel):
-    amount: float = Field(gt=0)
+    amount: float = Field(gt=0, le=MAX_AMOUNT)
 
 
 class GoalOut(BaseModel):

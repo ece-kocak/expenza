@@ -57,10 +57,10 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 
 ### İşlev hataları
 
-- [ ] `HATA-06` Bütçe, hedef ve geçmiş ekranları istek başarısız olunca boş liste gösteriyor (`budgets_screen.dart:59`, `goals_screen.dart:80`, `history_screen.dart:217`).
-- [ ] `HATA-07` Token süresi (7 gün) dolunca uygulama giriş ekranına dönmüyor; ekranlar hata gösteriyor.
+- [x] `HATA-06` Bütçe, hedef ve geçmiş ekranları istek başarısız olunca boş liste gösteriyor (`budgets_screen.dart:59`, `goals_screen.dart:80`, `history_screen.dart:217`). Düzeltildi: ortak `LoadError` görünümü (hata mesajı ve "Tekrar dene"); ana sayfa, işlemler, analitik, bütçe ve hedef ekranlarında.
+- [x] `HATA-07` Token süresi (7 gün) dolunca uygulama giriş ekranına dönmüyor; ekranlar hata gösteriyor. Düzeltildi: oturum açıkken 401 gelirse token silinir, açık sayfalar kapanır ve giriş ekranı "Oturumun sona erdi" mesajıyla açılır (`ApiClient.session`).
 - [x] `HATA-08` `PUT /transactions/{id}` ile bir alana `null` gönderilirse 500 dönüyor (`transactions.py:160-163`). Düzeltildi: `null` gönderilen alanlar artık değiştirilmiyor.
-- [ ] `HATA-09` Analitik sekmesi işlem eklendikten sonra yenilenmiyor (`home_shell.dart:48`).
+- [x] `HATA-09` Analitik sekmesi işlem eklendikten sonra yenilenmiyor (`home_shell.dart:48`). Düzeltildi.
 - [x] `HATA-10` Veritabanı yolu göreli (`backend/app/database.py:11`); backend başka klasörden başlatılırsa boş bir veritabanı oluşur.
 - [x] `HATA-11` İşlemler listesinde gün başlığındaki net tutar eksi işaretini iki kez yazıyordu ("−−₺202,62"). Düzeltildi (`history_screen.dart`).
 
@@ -68,8 +68,8 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 
 - [ ] `SEC-09` Token 7 gün geçerli, refresh yok, çıkış sadece istemcide (`auth.py:19`, `api_client.dart:66`).
 - [x] `SEC-11` Kayıt hatası e-postanın kayıtlı olduğunu söylüyor; girişte kullanıcı yoksa bcrypt çalışmadığı için cevap süresi farklı (`auth_router.py:16`, `33-38`). Kısmen: giriş artık kullanıcı yokken de bcrypt çalıştırıyor (zamanlama farkı yok). Kayıt ekranındaki "e-posta zaten kayıtlı" mesajı kullanıcı deneyimi için bırakıldı; kayıt istek sınırı bu ifşayı yavaşlatıyor.
-- [ ] `SEC-12` Not, görünen ad, sohbet mesajı ve kategori metninde uzunluk sınırı yok; `limit` parametresi ve tutarlar için üst sınır yok.
-- [ ] `SEC-13` Demo hesabın bilgileri giriş ekranına gömülü (`login_screen.dart:16-17`). Yapılacak: önceden doldurmayı sadece debug derlemesine bağlamak, `seed_demo.py`'nin yayında çalışmasını engellemek.
+- [x] `SEC-12` Not, görünen ad, sohbet mesajı ve kategori metninde uzunluk sınırı yok; `limit` parametresi ve tutarlar için üst sınır yok. Düzeltildi: tutarlar en fazla 1 milyar, not 500 karakter, görünen ad 120, sohbet mesajı 1000, liste `limit` 1-500.
+- [x] `SEC-13` Demo hesabın bilgileri giriş ekranına gömülü (`login_screen.dart:16-17`). Yapılacak: önceden doldurmayı sadece debug derlemesine bağlamak, `seed_demo.py`'nin yayında çalışmasını engellemek. Düzeltildi: alanlar yalnızca debug derlemesinde dolu geliyor (`kDebugMode`); `seed_demo.py` SQLite dışında `--force` olmadan çalışmıyor.
 - [ ] `SEC-15` Model pickle formatında yükleniyor (`categorizer.py:107`). Yapılacak: model dosyasının hash'ini doğrulamak.
 - [ ] `SEC-17` Android release derlemesi debug anahtarıyla imzalanıyor (`mobile/android/app/build.gradle.kts:32`).
 - [x] `SEC-18` Kullanıcı metni Gemini prompt'una doğrudan ekleniyor (`chat.py:79-110`, `categorizer.py:133-143`). Yapılacak: kullanıcı metnini ayrı ve sınırlı bir bölümde vermek. Düzeltildi: kullanıcı mesajı sistem talimatından ayrı alanda gidiyor (`systemInstruction`), mesaj 1000 karakterle sınırlı ve talimatlar kullanıcı metnindeki komutları uygulamamasını söylüyor.
@@ -85,7 +85,7 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 - [x] `KOD-05` Gemini çağrısı iki ayrı yerde ve iki farklı model adıyla yazılmış (`chat.py`, `categorizer.py`). Tek modülde toplanmalı. Düzeltildi: tüm Gemini çağrıları `app/llm.py` üzerinden.
 - [ ] `KOD-06` Performans: tekrarlayan işlem üretimindeki N+1 sorgu ve satır başına commit; açılışta beş sekmenin birden yüklenmesi (3 kez `GET /transactions`); analitik uçlarının bütün işlemleri belleğe çekmesi; `chat.py`'de `async` fonksiyon içinde senkron veritabanı sorgusu; sayfalama olmaması. Tekrarlayan işlemdeki N+1 ve sohbetteki async/senkron sorunu giderildi; diğerleri açık.
 - [x] `KOD-07` Güncel olmayan belgeler: `expenza_yol_haritasi.md` Go, PostgreSQL ve Riverpod anlatıyor; `categorizer.py` başındaki açıklama "STUB ile çalışır" diyor. Eski yol haritası kaldırıldı, `categorizer.py` açıklaması güncellendi.
-- [ ] `KOD-08` `theme.dart:37` `\$e` yazdığı için döviz kuru hatasını basmıyor.
+- [x] `KOD-08` `theme.dart:37` `\$e` yazdığı için döviz kuru hatasını basmıyor. Düzeltildi.
 - [ ] `KOD-09` Backend metinleri (içgörü, anomali nedeni, sohbet) para birimini ₺ olarak sabit yazıyor. Geçmiş tutarlar bugünkü kurla çevriliyor.
 - [x] `KOD-10` `categorizer.py`'de `Optional` import edilmemiş; sadece `from __future__ import annotations` sayesinde hata vermiyor.
 

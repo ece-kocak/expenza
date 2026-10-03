@@ -6,11 +6,16 @@ ekranındaki tahmin ve anomali bölümleri demo'da dolu görünür.
 
 Çalıştırma:
     python seed_demo.py
+
+Demo hesabının parolası herkesçe bilindiği için betik yalnızca SQLite (geliştirme)
+veritabanında çalışır; başka bir veritabanında --force gerekir.
 """
 import random
+import sys
 from datetime import date, timedelta
 
 from app.auth import hash_password
+from app.config import settings
 from app.database import SessionLocal
 from app.migrate import upgrade_database
 from app.models import CategoryEnum, Transaction, TxType, User
@@ -53,6 +58,11 @@ def get_or_create_user(db) -> User:
 
 
 def main() -> None:
+    if not settings.database_url.startswith("sqlite") and "--force" not in sys.argv:
+        sys.exit(
+            "Demo verisi yalnızca SQLite geliştirme veritabanına yüklenir. "
+            "Bilerek yapıyorsan --force ekle."
+        )
     upgrade_database()  # backend hiç çalıştırılmadan da kullanılabilsin
     db = SessionLocal()
     try:

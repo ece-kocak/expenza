@@ -2,7 +2,7 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
@@ -50,7 +50,7 @@ def create_transaction(
 
 @router.get("", response_model=list[schemas.TransactionOut])
 def list_transactions(
-    limit: int = 200,
+    limit: int = Query(200, ge=1, le=500),
     category: Optional[models.CategoryEnum] = None,
     type: Optional[models.TxType] = None,
     month: Optional[str] = None,  # "YYYY-MM"

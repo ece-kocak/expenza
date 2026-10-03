@@ -83,7 +83,7 @@ Sohbet asistanı kullanıcı uygulamada açık onay verene kadar çalışmaz. On
 python seed_demo.py
 ```
 
-Bir demo kullanıcısı ve yaklaşık dört aylık örnek işlem oluşturur; giriş ekranı bu hesapla dolu gelir. Betik her çalıştırıldığında demo kullanıcısının mevcut işlemlerini silip yeniden yazar.
+Bir demo kullanıcısı ve yaklaşık dört aylık örnek işlem oluşturur; geliştirme (debug) derlemesinde giriş ekranı bu hesapla dolu gelir. Betik her çalıştırıldığında demo kullanıcısının mevcut işlemlerini silip yeniden yazar. Demo hesabının parolası herkesçe bilindiği için betik yalnızca SQLite veritabanında çalışır (başka bir veritabanında `--force` gerekir).
 
 ## Flutter uygulamasını çalıştırma
 

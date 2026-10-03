@@ -1,6 +1,8 @@
 """İşlem uçları: ekleme, otomatik kategori, filtreleme, güncelleme, silme."""
 from datetime import date
 
+import pytest
+
 
 def test_explicit_category_is_kept(add_tx, user):
     tx = add_tx(user["headers"], category="Faturalar", note="migros")
@@ -69,3 +71,21 @@ def test_delete(client, user, add_tx):
 
 def test_default_date_is_today(add_tx, user):
     assert add_tx(user["headers"])["occurred_on"] == date.today().isoformat()
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"amount": 10, "note": "x" * 501},
+        {"amount": 1_000_000_001},
+    ],
+)
+def test_oversized_input_is_rejected(client, user, body):
+    r = client.post("/transactions", json={"type": "expense", **body}, headers=user["headers"])
+    assert r.status_code == 422
+
+
+@pytest.mark.parametrize("limit", [0, 501])
+def test_list_limit_is_bounded(client, user, limit):
+    r = client.get("/transactions", params={"limit": limit}, headers=user["headers"])
+    assert r.status_code == 422
