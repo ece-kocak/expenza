@@ -48,8 +48,8 @@ Kimlik önekleri: `SEC` güvenlik, `HATA` işlev hatası, `ALT` altyapı ve belg
 
 - [x] `ALT-05` Diğer kopyadaki (`themlie/expenza`) commit'lenmemiş çalışmalar bu repoya taşınmalı: fiş tarama (`ocr_service.dart`, `image_picker`, `google_mlkit_text_recognition`, iOS izinleri), `toggleThemeMode` düzeltmesi, README ve güncel yol haritası. Fiş tarama ve tema taşındı; fişten okunan TL tutarı artık seçili para birimine çevriliyor. Yol haritasının (`YOL_HARITASI.md`) taşınması ayrıca kararlaştırılacak.
 - [x] `ALT-06` Repo temizliği: `backend/venv/` (8138 dosya, Mac'e ait Python 3.9 ortamı) ve `mobile/macos/Flutter/ephemeral/` git takibinden çıkarılmalı (`git rm --cached`). İkisi de geliştiricinin yerel yolunu içeriyor.
-- [ ] `ALT-07` Backend'de hiç test yok. Yapılacak: pytest ile kayıt ve giriş, token, başka kullanıcının kaydına erişim, işlem uçları, bütçe hesabı, tekrarlayan işlem ve analitik testleri.
-- [ ] `ALT-08` Tek widget testi başarısız (`mobile/test/widget_test.dart:9`): giriş ekranında iki "Giriş Yap" metni var, test bir tane bekliyor.
+- [x] `ALT-07` Backend'de hiç test yok. Yapılacak: pytest ile kayıt ve giriş, token, başka kullanıcının kaydına erişim, işlem uçları, bütçe hesabı, tekrarlayan işlem ve analitik testleri. `backend/tests/` altında 60 test eklendi; kapsam %85 (`pytest --cov=app`). Tekrarlayan işlem testleri `HATA-01` ile gelecek.
+- [x] `ALT-08` Tek widget testi başarısız (`mobile/test/widget_test.dart:9`): giriş ekranında iki "Giriş Yap" metni var, test bir tane bekliyor. Test düzeltildi ve kayıt sekmesi için ikinci test eklendi; bu test giriş ekranının altındaki satırın büyük yazı boyutunda taştığını da ortaya çıkardı (düzeltildi).
 - [ ] `ALT-09` CI yok. Yapılacak: GitHub Actions ile her push'ta pytest, `flutter analyze` ve `flutter test`.
 - [ ] `ALT-10` Fiş tarama (ML Kit) iOS'ta büyük olasılıkla en az iOS 15.5 hedefi istiyor; `ios/Podfile` repoda yok ve iOS derlemesi Mac olmadan denenemedi. Mac'te ilk `flutter run` sırasında kontrol edilmeli (belirsiz).
 
