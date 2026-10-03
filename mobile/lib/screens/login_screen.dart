@@ -334,6 +334,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+        if (_isRegister) ...[
+          const SizedBox(height: 8),
+          Text('En az 8 karakter; en az bir harf ve bir rakam.',
+              style: TextStyle(fontSize: 12, color: AppColors.outline)),
+        ],
       ],
     );
   }

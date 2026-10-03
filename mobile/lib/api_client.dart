@@ -7,7 +7,9 @@ import 'models.dart';
 
 /// Expenza backend REST istemcisi.
 ///
-/// Taban URL platforma göre seçilir:
+/// Taban URL derleme sırasında verilebilir (yayın için, HTTPS):
+///   flutter build web --dart-define=API_BASE_URL=https://api.ornek.com
+/// Verilmezse geliştirme adresleri kullanılır:
 /// - Android emülatör: 10.0.2.2 (host makineye köprü)
 /// - Web/masaüstü/iOS sim: localhost
 class ApiClient {
@@ -21,7 +23,10 @@ class ApiClient {
   // için 8010 seçildi — uvicorn'u bu portla başlat.)
   static const int port = 8010;
 
+  static const String _configuredBaseUrl = String.fromEnvironment('API_BASE_URL');
+
   static String get baseUrl {
+    if (_configuredBaseUrl.isNotEmpty) return _configuredBaseUrl;
     // Web'de dart:io yok; foundation'ın platform bilgisini kullanıyoruz.
     if (kIsWeb) {
       // Sayfanın sunulduğu host üzerinden API'ye bağlan. Böylece hem PC'de
@@ -255,8 +260,15 @@ class ApiClient {
 
   Exception _err(http.Response r) {
     try {
-      final d = jsonDecode(r.body);
-      return Exception(d['detail']?.toString() ?? 'Hata ${r.statusCode}');
+      final detail = jsonDecode(r.body)['detail'];
+      // Doğrulama hatası (422) bir liste döner; ilk mesaj kullanıcıya gösterilir.
+      if (detail is List && detail.isNotEmpty) {
+        final msg = (detail.first['msg'] ?? '')
+            .toString()
+            .replaceFirst('Value error, ', '');
+        if (msg.isNotEmpty) return Exception(msg);
+      }
+      return Exception(detail?.toString() ?? 'Hata ${r.statusCode}');
     } catch (_) {
       return Exception('Hata ${r.statusCode}');
     }
