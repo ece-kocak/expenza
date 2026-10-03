@@ -1,13 +1,17 @@
+# Backend çalışma bağımlılıkları. Python 3.12 ile test edildi.
+# Model eğitimi için ek paketler: requirements-ml.txt
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
+alembic==1.20.0
 pydantic==2.10.4
 pydantic-settings==2.7.1
+python-dotenv==1.2.4
 python-jose[cryptography]==3.3.0
 bcrypt==5.0.0
 python-multipart==0.0.20
 httpx==0.28.1
 email-validator==2.2.0
-scikit-learn
+# app/ml/model/categorizer.joblib bu sürümle kaydedildi; değiştirilirse model yeniden eğitilmeli.
+scikit-learn==1.9.0
 joblib==1.5.3
-pandas

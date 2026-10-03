@@ -1,0 +1,6 @@
+# Model eğitimi ve değerlendirmesi (ml_training/) için ek paketler.
+-r requirements.txt
+pandas==3.0.3
+
+# BERTurk kıyas modeli (ml_training/berturk_train.py) GPU ister ve ayrıca kurulur:
+#   pip install transformers datasets accelerate torch
