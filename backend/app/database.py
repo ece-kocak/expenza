@@ -3,12 +3,12 @@
 MVP aşamasında SQLite kullanılır (kurulum gerektirmez). Üretim/ileri aşamada
 DATABASE_URL ortam değişkeni ile PostgreSQL'e geçilebilir.
 """
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./expenza.db")
+from .config import settings
+
+DATABASE_URL = settings.database_url
 
 # SQLite tek dosyalı; çok-thread'li FastAPI için check_same_thread kapatılır.
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}

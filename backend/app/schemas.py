@@ -79,7 +79,7 @@ class BudgetOut(BaseModel):
 
 # ---- ML ----
 class CategorizeRequest(BaseModel):
-    text: str
+    text: str = Field(max_length=500)  # işlem notu sütunuyla aynı sınır
 
 
 class CategorizeResponse(BaseModel):

@@ -11,6 +11,9 @@ Tüm modeller şu sözleşmeyi uygular:
 """
 from __future__ import annotations
 
+from typing import Optional
+
+from ..config import settings
 from ..models import CategoryEnum
 
 # Kural-tabanlı stub için anahtar kelime sözlüğü.
@@ -118,11 +121,10 @@ class GeminiCategorizer:
     name = "gemini-classifier-v1"
 
     def predict(self, text: str) -> tuple[Optional[CategoryEnum], float]:
-        import os
         import httpx
         import json
 
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = settings.gemini_api_key
         if not api_key:
             return None, 0.0
 

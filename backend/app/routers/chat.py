@@ -1,4 +1,3 @@
-import os
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -7,6 +6,7 @@ from pydantic import BaseModel
 
 from .. import models
 from ..auth import get_current_user
+from ..config import settings
 from ..database import get_db
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -23,7 +23,7 @@ async def chat_with_gemini(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = settings.gemini_api_key
     if not api_key:
         return ChatResponse(
             reply="Merhaba! Ben Expenza AI. Size yardımcı olabilmem için lütfen backend tarafında `GEMINI_API_KEY` ortam değişkenini tanımlayın."

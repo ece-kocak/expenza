@@ -1,8 +1,7 @@
 """Kimlik doğrulama: parola hashleme + JWT üretimi/çözümü.
 
-MVP için basit JWT. SECRET_KEY üretimde ortam değişkeninden gelmeli.
+SECRET_KEY zorunludur ve ortam değişkeninden ya da backend/.env dosyasından gelir.
 """
-import os
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -12,9 +11,19 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from . import models
+from .config import settings
 from .database import get_db
 
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
+MIN_SECRET_LENGTH = 32
+
+if not settings.secret_key or len(settings.secret_key) < MIN_SECRET_LENGTH:
+    raise RuntimeError(
+        f"SECRET_KEY tanımlı değil ya da {MIN_SECRET_LENGTH} karakterden kısa. "
+        "backend/.env dosyasına (örnek: backend/.env.example) rastgele bir değer ekleyin: "
+        'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+    )
+
+SECRET_KEY = settings.secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 hafta
 
