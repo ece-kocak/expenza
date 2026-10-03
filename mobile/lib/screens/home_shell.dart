@@ -97,28 +97,3 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 }
-
-/// Sekmelerde ortak kullanılan sade üst başlık.
-class ExpenzaAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
-  final List<Widget>? actions;
-  const ExpenzaAppBar({super.key, required this.title, this.actions});
-
-  @override
-  Size get preferredSize => const Size.fromHeight(56);
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: AppColors.background,
-      surfaceTintColor: AppColors.background,
-      elevation: 0,
-      title: Text(title,
-          style: TextStyle(
-              color: AppColors.onSurface,
-              fontWeight: FontWeight.w700,
-              fontSize: 20)),
-      actions: actions,
-    );
-  }
-}
