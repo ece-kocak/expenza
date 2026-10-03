@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Backend'e bağlanmak için. Debug/profile manifestlerinde var ama release derlemesi
+         yalnızca bu dosyayı kullanır. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="expenza_mobile"
         android:name="${applicationName}"
