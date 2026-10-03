@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../api_client.dart';
@@ -13,13 +14,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _email = TextEditingController(text: 'test@expenza.com');
-  final _pass = TextEditingController(text: 'secret1');
+  // Demo hesabı (seed_demo.py) yalnızca geliştirme derlemesinde önceden doldurulur;
+  // release derlemesinde bu değerler koda girmez.
+  final _email = TextEditingController(text: kDebugMode ? 'test@expenza.com' : '');
+  final _pass = TextEditingController(text: kDebugMode ? 'secret1' : '');
   final _name = TextEditingController();
   bool _isRegister = false;
   bool _busy = false;
   bool _obscure = true;
-  String? _error;
+  // Sunucu oturumu düşürdüyse (401) giriş ekranı nedenini gösterir.
+  String? _error = ApiClient.instance.sessionEndedReason;
 
   Future<void> _submit() async {
     setState(() {

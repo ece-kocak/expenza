@@ -6,12 +6,20 @@ import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
 import 'theme.dart';
 
+/// Oturum düştüğünde üstte açık kalan sayfaları (işlem ekleme, sohbet...) kapatmak için.
+final navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Türkçe tarih/sayı biçimlendirmesi için yerel veriyi başlat (ay adları vb.).
   await initializeDateFormatting('tr_TR', null);
   // Döviz kurlarını asenkron olarak arka planda güncelle (varsayılan kurlar hazırda bekliyor)
   CurrencyService.updateRates();
+  ApiClient.instance.session.addListener(() {
+    if (!ApiClient.instance.session.value) {
+      navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
+  });
   runApp(const ExpenzaApp());
 }
 
@@ -30,6 +38,7 @@ class ExpenzaApp extends StatelessWidget {
             // Ekranların okuduğu nötr renkleri aktif moda göre güncelle.
             AppColors.applyMode(isDark);
             return MaterialApp(
+              navigatorKey: navigatorKey,
               title: 'Expenza',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.fromMode(isDark),
@@ -48,7 +57,7 @@ class ExpenzaApp extends StatelessWidget {
                   ),
                 );
               },
-              home: _AuthGate(),
+              home: const _AuthGate(),
             );
           },
         );
@@ -57,19 +66,18 @@ class ExpenzaApp extends StatelessWidget {
   }
 }
 
-/// Oturum durumuna göre giriş veya ana kabuğu gösterir.
-class _AuthGate extends StatefulWidget {
+/// Oturum durumuna göre giriş veya ana kabuğu gösterir. Çıkışta ya da sunucu token'ı
+/// reddettiğinde (401) ApiClient.session false olur ve giriş ekranına dönülür.
+class _AuthGate extends StatelessWidget {
   const _AuthGate();
-  @override
-  State<_AuthGate> createState() => _AuthGateState();
-}
 
-class _AuthGateState extends State<_AuthGate> {
   @override
   Widget build(BuildContext context) {
-    if (!ApiClient.instance.isLoggedIn) {
-      return LoginScreen(onLoggedIn: () => setState(() {}));
-    }
-    return HomeShell(onLogout: () => setState(() {}));
+    return ValueListenableBuilder<bool>(
+      valueListenable: ApiClient.instance.session,
+      builder: (context, loggedIn, _) => loggedIn
+          ? HomeShell(onLogout: () {})
+          : LoginScreen(onLoggedIn: () {}),
+    );
   }
 }

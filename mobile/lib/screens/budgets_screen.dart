@@ -56,6 +56,9 @@ class BudgetsScreenState extends State<BudgetsScreen> {
               return Center(
                   child: CircularProgressIndicator(color: AppColors.onSurface));
             }
+            if (snap.hasError) {
+              return LoadError(error: snap.error!, onRetry: refresh);
+            }
             final budgets = snap.data ?? [];
             final categoryBudgets = budgets.where((b) => b.category != 'Toplam').toList();
             final totalBudget = budgets.firstWhere(

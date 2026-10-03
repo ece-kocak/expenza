@@ -34,7 +34,7 @@ class CurrencyService {
         }
       }
     } catch (e) {
-      debugPrint('Döviz kurları güncellenemedi, varsayılan kurlar kullanılacak: \$e');
+      debugPrint('Döviz kurları güncellenemedi, varsayılan kurlar kullanılacak: $e');
     }
   }
 
@@ -273,6 +273,38 @@ class _PressState extends State<Press> {
 }
 
 /// Yüklenince yumuşakça aşağıdan yukarı beliren animasyon (staggered "rise").
+/// Veri alınamadığında gösterilen ortak hata görünümü (aşağı çekerek de yenilenebilir).
+class LoadError extends StatelessWidget {
+  final Object error;
+  final VoidCallback onRetry;
+  const LoadError({super.key, required this.error, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final msg = error.toString().replaceFirst('Exception: ', '');
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        const SizedBox(height: 120),
+        Icon(Icons.cloud_off, color: AppColors.outline, size: 48),
+        const SizedBox(height: 12),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text('Veriler alınamadı.\n$msg',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.onSurfaceVariant)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Center(
+            child: TextButton(
+                onPressed: onRetry, child: const Text('Tekrar dene'))),
+      ],
+    );
+  }
+}
+
 class Rise extends StatefulWidget {
   final Widget child;
   final int delayMs;

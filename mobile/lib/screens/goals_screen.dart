@@ -77,6 +77,9 @@ class _GoalsScreenState extends State<GoalsScreen> {
               return Center(
                   child: CircularProgressIndicator(color: AppColors.onSurface));
             }
+            if (snap.hasError) {
+              return LoadError(error: snap.error!, onRetry: _refresh);
+            }
             final goals = snap.data ?? [];
             return ListView(
               padding: const EdgeInsets.fromLTRB(24, 56, 24, 120),

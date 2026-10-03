@@ -24,7 +24,7 @@ class _HomeShellState extends State<HomeShell> {
   final _dashKey = GlobalKey<DashboardScreenState>();
   final _budgetKey = GlobalKey<BudgetsScreenState>();
   final _historyKey = GlobalKey<HistoryScreenState>();
-
+  final _analyticsKey = GlobalKey<AnalyticsScreenState>();
 
   static const _items = [
     (Icons.home_outlined, Icons.home, 'Ana Sayfa'),
@@ -43,9 +43,10 @@ class _HomeShellState extends State<HomeShell> {
         onTransactionAdded: () {
           _dashKey.currentState?.refresh();
           _budgetKey.currentState?.refresh();
+          _analyticsKey.currentState?.refresh();
         },
       ),
-      AnalyticsScreen(),
+      AnalyticsScreen(key: _analyticsKey),
       BudgetsScreen(key: _budgetKey),
       ProfileScreen(onLogout: widget.onLogout),
     ];

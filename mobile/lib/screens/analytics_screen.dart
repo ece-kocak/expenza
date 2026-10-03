@@ -16,10 +16,10 @@ class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  State<AnalyticsScreen> createState() => _AnalyticsScreenState();
+  State<AnalyticsScreen> createState() => AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> {
+class AnalyticsScreenState extends State<AnalyticsScreen> {
   late Future<_Data> _future;
 
   @override
@@ -27,6 +27,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     super.initState();
     _future = _load();
   }
+
+  void refresh() => setState(() { _future = _load(); });
 
   Future<_Data> _load() async {
     final api = ApiClient.instance;
@@ -51,7 +53,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final isDark = themeModeNotifier.value == ThemeMode.dark;
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: () async => setState(() => _future = _load()),
+        onRefresh: () async => refresh(),
         color: AppColors.onSurface,
         backgroundColor: AppColors.surface,
         child: FutureBuilder<_Data>(
@@ -62,13 +64,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   child: CircularProgressIndicator(color: AppColors.onSurface));
             }
             if (snap.hasError) {
-              return ListView(children: [
-                const SizedBox(height: 120),
-                Center(
-                    child: Text('Veri alınamadı\n${snap.error}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.onSurfaceVariant))),
-              ]);
+              return LoadError(error: snap.error!, onRetry: refresh);
             }
             final d = snap.data!;
             return ListView(

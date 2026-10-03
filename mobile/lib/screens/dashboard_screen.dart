@@ -114,7 +114,9 @@ class DashboardScreenState extends State<DashboardScreen> {
               return Center(
                   child: CircularProgressIndicator(color: AppColors.onSurface));
             }
-            if (snap.hasError) return _errorState(snap.error.toString());
+            if (snap.hasError) {
+              return LoadError(error: snap.error!, onRetry: refresh);
+            }
             final d = snap.data!;
             final s = d.summary;
 
@@ -542,23 +544,4 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _errorState(String msg) {
-    return ListView(
-      children: [
-        const SizedBox(height: 120),
-        Icon(Icons.cloud_off, color: AppColors.outline, size: 48),
-        const SizedBox(height: 12),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text('Backend\'e bağlanılamadı.\n$msg',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.onSurfaceVariant)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Center(child: TextButton(onPressed: refresh, child: const Text('Tekrar dene'))),
-      ],
-    );
-  }
 }

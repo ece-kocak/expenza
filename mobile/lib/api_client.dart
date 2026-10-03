@@ -19,6 +19,12 @@ class ApiClient {
   String? _token;
   bool get isLoggedIn => _token != null;
 
+  /// Oturum durumu: girişte true; çıkışta ya da sunucu token'ı reddedince (401) false.
+  final ValueNotifier<bool> session = ValueNotifier(false);
+
+  /// Oturum sunucu tarafından düşürüldüyse giriş ekranında gösterilecek mesaj.
+  String? sessionEndedReason;
+
   // Backend portu. (8000 bu makinede başka bir süreç tarafından kullanıldığı
   // için 8010 seçildi — uvicorn'u bu portla başlat.)
   static const int port = 8010;
@@ -66,9 +72,14 @@ class ApiClient {
     );
     if (r.statusCode >= 400) throw _err(r);
     _token = jsonDecode(r.body)['access_token'];
+    sessionEndedReason = null;
+    session.value = true;
   }
 
-  void logout() => _token = null;
+  void logout() {
+    _token = null;
+    session.value = false;
+  }
 
   Future<({String email, String displayName})> getMe() async {
     final r = await http.get(_u('/auth/me'), headers: _headers);
@@ -259,6 +270,11 @@ class ApiClient {
   }
 
   Exception _err(http.Response r) {
+    // Oturum açıkken 401: token süresi dolmuş ya da geçersiz; giriş ekranına dönülür.
+    if (r.statusCode == 401 && _token != null) {
+      sessionEndedReason = 'Oturumun sona erdi. Lütfen tekrar giriş yap.';
+      logout();
+    }
     try {
       final detail = jsonDecode(r.body)['detail'];
       // Doğrulama hatası (422) bir liste döner; ilk mesaj kullanıcıya gösterilir.

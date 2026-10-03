@@ -213,6 +213,9 @@ class HistoryScreenState extends State<HistoryScreen> {
                         child: CircularProgressIndicator(
                             color: AppColors.onSurface));
                   }
+                  if (snap.hasError) {
+                    return LoadError(error: snap.error!, onRetry: refresh);
+                  }
                   final txs = snap.data ?? [];
                   if (txs.isEmpty) return _empty();
                   return _groupedList(txs);
