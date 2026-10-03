@@ -50,10 +50,11 @@ Color categoryColor(String c) => switch (c) {
     };
 
 class _DashData {
-  final List<TransactionModel> txs;
+  final SummaryModel summary;
+  final List<TransactionModel> recent;
   final List<GoalModel> goals;
   final String name;
-  _DashData(this.txs, this.goals, this.name);
+  _DashData(this.summary, this.recent, this.goals, this.name);
 }
 
 class DashboardScreen extends StatefulWidget {
@@ -75,15 +76,18 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<_DashData> _load() async {
     final api = ApiClient.instance;
+    // Bakiye ve dağılım backend'de bütün işlemlerden hesaplanır; listeden sadece
+    // "Son İşlemler" için birkaç kayıt çekilir.
     final r = await Future.wait([
-      api.getTransactions(),
+      api.getSummary(),
+      api.getTransactions(limit: 6),
       api.getGoals(),
       api.getMe(),
     ]);
-    final me = r[2] as ({String email, String displayName});
+    final me = r[3] as ({String email, String displayName});
     final name = me.displayName.isNotEmpty ? me.displayName : 'Kullanıcı';
-    return _DashData(
-        r[0] as List<TransactionModel>, r[1] as List<GoalModel>, name);
+    return _DashData(r[0] as SummaryModel, r[1] as List<TransactionModel>,
+        r[2] as List<GoalModel>, name);
   }
 
   void refresh() => setState(() { _future = _load(); });
@@ -112,28 +116,27 @@ class DashboardScreenState extends State<DashboardScreen> {
             }
             if (snap.hasError) return _errorState(snap.error.toString());
             final d = snap.data!;
-            final income = d.txs
-                .where((t) => t.type == 'income')
-                .fold(0.0, (s, t) => s + t.amount);
-            final expense = d.txs
-                .where((t) => t.type == 'expense')
-                .fold(0.0, (s, t) => s + t.amount);
+            final s = d.summary;
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(24, 56, 24, 120),
               children: [
                 Rise(child: _header(d.name)),
                 const SizedBox(height: 44),
-                Rise(delayMs: 40, child: _balance(income - expense)),
+                Rise(delayMs: 40, child: _balance(s.balance)),
                 const SizedBox(height: 22),
-                Rise(delayMs: 60, child: _incomeExpense(income, expense)),
+                Rise(
+                    delayMs: 60,
+                    child: _incomeExpense(s.totalIncome, s.totalExpense)),
                 const SizedBox(height: 40),
                 if (d.goals.isNotEmpty)
                   Rise(delayMs: 90, child: _goalLine(d.goals.first)),
                 if (d.goals.isNotEmpty) const SizedBox(height: 40),
-                Rise(delayMs: 120, child: _spending(d.txs, expense)),
+                Rise(
+                    delayMs: 120,
+                    child: _spending(s.monthByCategory, s.monthExpense)),
                 const SizedBox(height: 40),
-                Rise(delayMs: 150, child: _recent(d.txs)),
+                Rise(delayMs: 150, child: _recent(d.recent)),
               ],
             );
           },
@@ -356,14 +359,11 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ---- Harcama dağılımı (monokrom donut) ----
-  Widget _spending(List<TransactionModel> txs, double expense) {
-    final byCat = <String, double>{};
-    for (final t in txs.where((t) => t.type == 'expense')) {
-      byCat[t.category] = (byCat[t.category] ?? 0) + t.amount;
-    }
-    final entries = byCat.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+  // ---- Harcama dağılımı: bu ayın giderleri (monokrom donut) ----
+  Widget _spending(
+      List<({String category, double total})> byCategory, double expense) {
+    // Backend zaten büyükten küçüğe sıralı gönderir.
+    final entries = [for (final c in byCategory) MapEntry(c.category, c.total)];
     final top = entries.take(4).toList();
 
     // Kategori renkleriyle canlı donut (diğer ekranlarla tutarlı).

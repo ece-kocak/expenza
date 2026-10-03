@@ -44,6 +44,36 @@ class TransactionModel {
       );
 }
 
+/// Ana sayfa özeti (backend /transactions/summary). Tutarlar TL.
+class SummaryModel {
+  final double balance;
+  final double totalIncome;
+  final double totalExpense;
+  final double monthExpense;
+  final List<({String category, double total})> monthByCategory;
+
+  SummaryModel({
+    required this.balance,
+    required this.totalIncome,
+    required this.totalExpense,
+    required this.monthExpense,
+    required this.monthByCategory,
+  });
+
+  factory SummaryModel.fromJson(Map<String, dynamic> j) => SummaryModel(
+        balance: (j['balance'] as num).toDouble(),
+        totalIncome: (j['total_income'] as num).toDouble(),
+        totalExpense: (j['total_expense'] as num).toDouble(),
+        monthExpense: (j['month_expense'] as num).toDouble(),
+        monthByCategory: (j['month_by_category'] as List)
+            .map((e) => (
+                  category: e['category'] as String,
+                  total: (e['total'] as num).toDouble()
+                ))
+            .toList(),
+      );
+}
+
 class BudgetModel {
   final int id;
   final String category;

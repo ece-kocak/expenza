@@ -396,11 +396,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                 ),
               ),
-              if (_isIncome) ...[
-                const SizedBox(height: 18),
-                _recurringCheckbox(),
-              ],
               if (!_isIncome) _suggestionCard(),
+              const SizedBox(height: 18),
+              _recurringCheckbox(),
             ],
           ),
 
@@ -705,7 +703,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           Expanded(
             child: Text(
-              'Gelir kaydedilsin mi',
+              'Her ay tekrarla',
               style: TextStyle(fontSize: 14, color: AppColors.onSurface),
             ),
           ),
@@ -724,14 +722,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           borderRadius: BorderRadius.circular(20),
                           side: BorderSide(color: AppColors.glassBorder)),
                       title: Text(
-                        'Gelir Kaydedilsin Mi?',
+                        'Her ay tekrarlansın mı?',
                         style: TextStyle(
                             color: AppColors.onSurface,
                             fontSize: 16,
                             fontWeight: FontWeight.bold),
                       ),
                       content: Text(
-                        'Kabul ederseniz her ay otomatik olarak gelir olarak hesaplanacaktır. Devam etmek istiyor musunuz?',
+                        'Bu ${_isIncome ? 'gelir' : 'gider'} her ay aynı gün otomatik olarak eklenecek. '
+                        'İstediğin zaman bu işlemi düzenleyip işareti kaldırarak durdurabilirsin.',
                         style: TextStyle(
                             color: AppColors.onSurfaceVariant, fontSize: 13, height: 1.5),
                       ),

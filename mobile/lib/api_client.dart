@@ -92,6 +92,13 @@ class ApiClient {
         .toList();
   }
 
+  /// Bakiye ve toplamlar (tüm işlemler) ile bu ayın kategori dağılımı.
+  Future<SummaryModel> getSummary() async {
+    final r = await http.get(_u('/transactions/summary'), headers: _headers);
+    if (r.statusCode >= 400) throw _err(r);
+    return SummaryModel.fromJson(jsonDecode(r.body));
+  }
+
   Future<void> updateTransaction(
     int id, {
     double? amount,

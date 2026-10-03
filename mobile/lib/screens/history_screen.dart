@@ -307,7 +307,8 @@ class HistoryScreenState extends State<HistoryScreen> {
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.6,
                     color: AppColors.outline)),
-            Text('${net < 0 ? '−' : '+'}${money(net)}',
+            // money() eksi işaretini kendisi ekler; artıyı showSign ile ister.
+            Text(money(net, showSign: true),
                 style: TextStyle(
                     fontSize: 11.5,
                     color: AppColors.outline,
